@@ -655,6 +655,164 @@
     #view-duplicates-link:hover {
         text-decoration: underline;
     }
+
+    /* Responsive Layout Containers */
+    .containers {
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+        padding: 0;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    @media (max-width: 768px) {
+        .containers {
+            flex-direction: column;
+        }
+    }
+
+    /* Sidebar */
+    .secContent {
+        min-width: 250px;
+        max-width: 250px;
+        background-color: #012141;
+        padding: 20px;
+        transition: all 0.3s;
+    }
+
+    @media (max-width: 768px) {
+        .secContent {
+            min-width: 100%;
+            max-width: 100%;
+        }
+        
+        .vertical-nav {
+            width: 100%;
+        }
+    }
+
+    /* Main Content Area */
+    .content {
+        flex: 1;
+        padding: 20px;
+        min-width: 0; /* Prevents content overflow */
+    }
+
+    /* Table Responsiveness */
+    .data-table {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #data-table {
+        min-width: 800px; /* Minimum width to prevent squishing */
+    }
+
+    /* Filter Controls */
+    .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .filters > div {
+        flex: 1 1 200px;
+        min-width: 200px;
+    }
+
+    /* Charts Container */
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 640px) {
+        .charts-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Modal Responsiveness */
+    .modal-content {
+        width: 95%;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .modal-content {
+            width: 98%;
+            padding: 10px;
+            margin: 10px auto;
+        }
+    }
+
+    /* Button and Control Responsiveness */
+    button, select, input {
+        padding: 8px 12px;
+        margin: 5px;
+        min-height: 35px;
+    }
+
+    @media (max-width: 480px) {
+        button, select, input {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        #dynamic-dropdowns > div {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        #dynamic-dropdowns select {
+            margin: 5px 0;
+        }
+    }
+
+    /* Duplicate Modal Responsiveness */
+    #duplicate-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    @media (max-width: 768px) {
+        #duplicate-table td {
+            min-width: 120px;
+        }
+        
+        .details-cell {
+            max-width: 200px;
+            overflow-x: auto;
+        }
+    }
+
+    /* Success and Loading Popups */
+    .success-popup, .loading-popup {
+        max-width: 90%;
+        word-wrap: break-word;
+    }
+
+    /* Font Size Adjustments */
+    @media (max-width: 480px) {
+        body {
+            font-size: 14px;
+        }
+        
+        h1 {
+            font-size: 1.5em;
+        }
+        
+        h2 {
+            font-size: 1.3em;
+        }
+    }
 </style>
 </head>
 
@@ -1700,6 +1858,39 @@
                     $('#view-type').on('change', updateCharts);
                 });
                 </script>
+
+                <!-- Add this after your existing DataTable initialization -->
+                <script>
+                $(document).ready(function() {
+                    // Get the DataTable instance
+                    const table = $('#data-table').DataTable({
+                        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All Data']], // Replace 100 with -1 and show "All Data" text
+                        pageLength: 10 // Default page length
+                    });
+                    
+                    // Counter for page length changes
+                    let pageLengthChangeCount = 0;
+                    
+                    // Add event listener for page length changes
+                    table.on('length.dt', function(e, settings, len) {
+                        pageLengthChangeCount++;
+                        
+                        // On the 4th change, show all records
+                        if (pageLengthChangeCount === 4) {
+                            table.page.len(-1).draw(); // -1 shows all records
+                            
+                            // Optional: Disable the page length dropdown
+                            $('.dataTables_length select').prop('disabled', true);
+                            
+                            // Optional: Add visual feedback
+                            $('.dataTables_length').append(
+                                '<span style="margin-left: 10px; color: green;">' +
+                                '<i class="fas fa-check"></i> Showing all records</span>'
+                            );
+                        }
+                    });
+                });
+                </script>
             </div>
         </div>
 
@@ -1737,1358 +1928,4 @@
     </script>
 </body>
 
-</html>
-</div>
-</div>
-
-<!-- jQuery, DataTables, and Date Range Picker JavaScript -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-
-<script>
-    $(document).ready(function () {
-        const table = $('#data-table').DataTable();
-
-        // Populate Year Dropdown dynamically based on available years
-        function populateYearDropdown() {
-            const yearDropdown = $('#year-dropdown');
-            const startYear = 2020;
-            const endYear = new Date().getFullYear();
-
-            for (let year = startYear; year <= endYear; year++) {
-                yearDropdown.append(`<option value="${year}">${year}</option>`);
-            }
-        }
-        populateYearDropdown();
-
-        // Function to apply filters including the month filter
-        function applyFilters() {
-            const selectedLender = $('#lender-dropdown').val();
-            const selectedMonth = $('#month-dropdown').val();
-            const selectedYear = $('#year-dropdown').val();
-            const dateRange = $('#date-range-filter').val();
-            const createdAt = $('#created-at-dropdown').val();
-            const selectedPartner = $('#partner-dropdown').val(); // Add this line
-
-            // Reset filters
-            table.column(4).search(''); // Reset Lender column filter
-            table.column(2).search(''); // Reset disbursal date column filter
-            table.column(5).search(''); // Reset created at column filter
-            table.column(6).search(''); // Reset partner column filter
-
-            // Apply partner filter
-            if (selectedPartner) {
-                table.column(6).search(`^${selectedPartner}$`, true, false);
-            }
-
-            // Filter by lender
-            if (selectedLender) {
-                table.column(4).search(`^${selectedLender}$`, true, false).draw();
-            }
-
-            // Filter by both month and year if selected
-            if (selectedMonth && selectedYear) {
-                table.column(2).search(`^${selectedYear}-${selectedMonth}`, true, false).draw();
-            } else if (selectedMonth) {
-                table.column(2).search(`-${selectedMonth}-`, true, false).draw();
-            } else if (selectedYear) {
-                table.column(2).search(`^${selectedYear}-`, true, false).draw();
-            }
-
-            // Apply date range filter
-            if (dateRange) {
-                const [start, end] = dateRange.split(' - ');
-                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-                    const date = data[2]; // Use column 2 (disbursaldate) for filtering
-                    return date >= start && date <= end;
-                });
-            }
-
-            // Apply created at filter
-            if (createdAt) {
-                table.column(5).search(`^${createdAt}$`, true, false).draw();
-            }
-
-            table.draw();
-            updateTotals();
-        }
-
-        // Event listeners for filters
-        $('#lender-dropdown, #month-dropdown, #year-dropdown, #date-range-filter, #created-at-dropdown, #partner-dropdown').on('change', applyFilters);
-
-        // Initialize Date Range Picker for date range filter
-        $('#date-range-filter').daterangepicker({
-            autoUpdateInput: false,
-            locale: {
-                format: 'YYYY-MM-DD',
-                cancelLabel: 'Clear'
-            }
-        });
-
-        // Apply date range filter on date selection
-        $('#date-range-filter').on('apply.daterangepicker', function (ev, picker) {
-            const startDate = picker.startDate.format('YYYY-MM-DD');
-            const endDate = picker.endDate.format('YYYY-MM-DD');
-            $(this).val(startDate + ' - ' + endDate);
-            applyFilters();
-        });
-
-        // Clear date range filter on cancel
-        $('#date-range-filter').on('cancel.daterangepicker', function (ev, picker) {
-            $(this).val('');
-            applyFilters();
-        });
-
-        // Update totals based on filtered data
-        function updateTotals() {
-            let totalDisbursed = 0;
-            let totalCount = 0;
-
-            // Iterate over filtered rows to calculate totals
-            table.rows({ filter: 'applied' }).every(function () {
-                const data = this.data();
-                const disbursedAmount = parseFloat(data[1]) || 0;
-                totalDisbursed += disbursedAmount;
-                totalCount++;
-            });
-
-            // Display updated totals in the footer
-            $('#total-disbursed').text(totalDisbursed.toFixed(2));
-            $('#total-count').text(`${totalCount} records`);
-        }
-
-        // Open and close modal functionality
-        const modal = $('#table-view-modal');
-        $('#table-view-btn').on('click', function () {
-            updateSummaryTable();
-            $('#summary-table').DataTable();  // Apply DataTables to summary table
-            modal.show();
-        });
-        $('.close').on('click', function () {
-            modal.hide();
-            $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on close
-        });
-        $(window).on('click', function (event) {
-            if ($(event.target).is(modal)) {
-                modal.hide();
-                $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on outside click
-            }
-        });
-
-        // Update summary table based on filtered data
-        function updateSummaryTable() {
-            const summaryData = {};
-            const lenderSet = new Set();
-            const viewType = $('#view-type').val();
-            const selectedPartner = $('#partner-filter').val();
-            
-            // First pass: collect all unique lenders and initialize data structure
-            table.rows({ filter: 'applied' }).every(function() {
-                const rowData = this.data();
-                const partner = rowData[6]; // Partner column
-                
-                // Skip if partner doesn't match filter
-                if (selectedPartner && partner !== selectedPartner) {
-                    return;
-                }
-                
-                // Only process rows that have valid dates
-                if (rowData[2]) {  // rowData[2] is disbursaldate
-                    const [day, month, year] = rowData[2].split('-');
-                    const monthNames = [
-                        'January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'
-                    ];
-                    const monthName = monthNames[parseInt(month) - 1];
-                    const monthYear = `${monthName}-${year}`;
-                    const lender = rowData[4];
-                    const amount = parseFloat(rowData[1]) || 0;
-                    
-                    // Only create entry if we have valid data
-                    if (amount > 0 || viewType === 'count') {
-                        lenderSet.add(lender);
-                        
-                        if (!summaryData[monthYear]) {
-                            summaryData[monthYear] = {
-                                lenders: {},
-                                totalCount: 0,
-                                totalAmount: 0
-                            };
-                        }
-                        if (!summaryData[monthYear].lenders[lender]) {
-                            summaryData[monthYear].lenders[lender] = {
-                                count: 0,
-                                amount: 0
-                            };
-                        }
-                        
-                        summaryData[monthYear].lenders[lender].count++;
-                        summaryData[monthYear].lenders[lender].amount += amount;
-                        summaryData[monthYear].totalCount++;
-                        summaryData[monthYear].totalAmount += amount;
-                    }
-                }
-            });
-
-            // Sort months chronologically
-            const sortedMonths = Object.keys(summaryData).sort((a, b) => {
-                const monthOrder = {
-                    'January': 0, 'February': 1, 'March': 2, 'April': 3,
-                    'May': 4, 'June': 5, 'July': 6, 'August': 7,
-                    'September': 8, 'October': 9, 'November': 10, 'December': 11
-                };
-                
-                const [monthA, yearA] = a.split('-');
-                const [monthB, yearB] = b.split('-');
-                
-                if (yearA !== yearB) {
-                    return parseInt(yearA) - parseInt(yearB);
-                }
-                return monthOrder[monthA] - monthOrder[monthB];
-            });
-
-            const lenders = Array.from(lenderSet).sort();
-
-            // Update table header
-            const headerRow = $('#summary-header');
-            headerRow.empty().append('<th>Month</th>');
-            lenders.forEach(lender => {
-                headerRow.append(`<th>${lender}</th>`);
-            });
-            headerRow.append('<th>Total</th>');
-
-            // Update table body
-            const summaryTbody = $('#summary-tbody');
-            summaryTbody.empty();
-            
-            sortedMonths.forEach(month => {
-                const data = summaryData[month];
-                let row = `<tr><td>${month}</td>`;
-                
-                let rowTotal = 0;
-                lenders.forEach(lender => {
-                    const lenderData = data.lenders[lender] || { count: 0, amount: 0 };
-                    let value = 0;
-                    
-                    switch(viewType) {
-                        case 'count':
-                            value = lenderData.count;
-                            rowTotal += value;
-                            break;
-                        case 'amount':
-                            value = lenderData.amount;
-                            rowTotal += value;
-                            break;
-                        case 'payout':
-                            value = lenderData.amount * 0.03;
-                            rowTotal += value;
-                            break;
-                    }
-                    
-                    // Make all non-zero values clickable with data attributes
-                    row += `<td>${value > 0 ? 
-                        `<a href="#" class="summary-cell-link" 
-                            data-month="${month}" 
-                            data-lender="${lender}" 
-                            data-value="${value}"
-                            data-view-type="${viewType}">${value.toLocaleString('en-IN', {maximumFractionDigits: 2})}</a>` : 
-                        '0'}</td>`;
-                });
-                
-                // Add row total with clickable link
-                row += `<td><a href="#" class="summary-cell-link" 
-                    data-month="${month}" 
-                    data-lender="all" 
-                    data-value="${rowTotal}"
-                    data-view-type="${viewType}">${rowTotal.toLocaleString('en-IN', {maximumFractionDigits: 2})}</a></td></tr>`;
-                summaryTbody.append(row);
-            });
-
-            // Add click handler for summary cells
-            $('.summary-cell-link').off('click').on('click', function(e) {
-                e.preventDefault();
-                const month = $(this).data('month');
-                const lender = $(this).data('lender');
-                const viewType = $(this).data('view-type');
-                
-                // Get filtered data based on the cell clicked
-                const filteredData = [];
-                table.rows({ filter: 'applied' }).every(function() {
-                    const rowData = this.data();
-                    const rowDate = new Date(rowData[2]); // disbursal date
-                    const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
-                    const rowLender = rowData[4];
-                    const rowPartner = rowData[6];
-                    
-                    // Check if row matches all filter criteria
-                    if ((month === rowMonth || !month) && 
-                        (lender === rowLender || lender === 'all' || !lender) &&
-                        (!selectedPartner || rowPartner === selectedPartner)) {
-                        
-                        filteredData.push({
-                            'Phone': rowData[0],
-                            'Disbursed Amount': amount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                            'Disbursal Date': rowData[2],
-                            'Status': rowData[3],
-                            'Lender': rowData[4],
-                            'Created At': rowData[5],
-                            'Partner': rowData[6]
-                        });
-                    }
-                });
-
-                // Generate filename
-                const timestamp = new Date().toISOString().split('T')[0];
-                let filename = `${lender}_${month}_${viewType}_${timestamp}.csv`;
-                
-                // Download CSV
-                downloadAsCSV(filteredData, filename);
-            });
-
-            // Update footer totals
-            updateFooterTotals(summaryData, lenders, viewType);
-
-            // Add sort handlers to headers
-            $('.sortable').off('click').on('click', function() {
-                const sortBy = $(this).data('sort');
-                const isAsc = $(this).hasClass('sort-asc');
-                
-                // Remove sort indicators from all headers
-                $('.sortable').removeClass('sort-asc sort-desc');
-                
-                // Add sort indicator to clicked header
-                $(this).addClass(isAsc ? 'sort-desc' : 'sort-asc');
-                
-                // Sort the rows
-                const tbody = $('#summary-tbody');
-                const rows = tbody.find('tr').toArray();
-                
-                rows.sort((a, b) => {
-                    let aVal, bVal;
-                    
-                    if (sortBy === 'month') {
-                        const monthOrder = {
-                            'January': 0, 'February': 1, 'March': 2, 'April': 3,
-                            'May': 4, 'June': 5, 'July': 6, 'August': 7,
-                            'September': 8, 'October': 9, 'November': 10, 'December': 11
-                        };
-                        
-                        const [aMonth, aYear] = $(a).find('td:first').text().split('-');
-                        const [bMonth, bYear] = $(b).find('td:first').text().split('-');
-                        
-                        // First compare years
-                        if (aYear !== bYear) {
-                            return isAsc ? 
-                                parseInt(bYear) - parseInt(aYear) : 
-                                parseInt(aYear) - parseInt(bYear);
-                        }
-                        
-                        // If same year, compare months
-                        return isAsc ? 
-                            monthOrder[bMonth] - monthOrder[aMonth] : 
-                            monthOrder[aMonth] - monthOrder[bMonth];
-                    } else {
-                        // For numeric columns (including total)
-                        aVal = parseFloat($(a).find('td:last').text().replace(/[^0-9.-]+/g, '')) || 0;
-                        bVal = parseFloat($(b).find('td:last').text().replace(/[^0-9.-]+/g, '')) || 0;
-                        return isAsc ? bVal - aVal : aVal - bVal;
-                    }
-                });
-                
-                // Reattach sorted rows
-                tbody.empty().append(rows);
-            });
-        }
-
-        function updateFooterTotals(summaryData, lenders, viewType) {
-            const footerRow = $('#summary-footer');
-            footerRow.empty().append('<td>Total</td>');
-            
-            let grandTotal = 0;
-            
-            // Calculate column totals
-            const columnTotals = lenders.map(lender => {
-                let total = 0;
-                Object.values(summaryData).forEach(monthData => {
-                    const lenderData = monthData.lenders[lender] || { count: 0, amount: 0 };
-                    switch(viewType) {
-                        case 'count':
-                            total += lenderData.count;
-                            break;
-                        case 'amount':
-                            total += lenderData.amount;
-                            break;
-                        case 'payout':
-                            total += lenderData.amount * 0.03;
-                            break;
-                    }
-                });
-                grandTotal += total;
-                return total;
-            });
-
-            // Add lender totals with clickable links
-            columnTotals.forEach((total, index) => {
-                footerRow.append(`<td>
-                    <a href="#" class="footer-total-link" 
-                        data-lender="${lenders[index]}" 
-                        data-value="${total}"
-                        data-view-type="${viewType}">
-                        ${total.toLocaleString('en-IN', {maximumFractionDigits: 2})}
-                    </a>
-                </td>`);
-            });
-
-            // Add grand total with clickable link
-            footerRow.append(`<td>
-                <a href="#" class="footer-total-link" 
-                    data-lender="all" 
-                    data-value="${grandTotal}"
-                    data-view-type="${viewType}">
-                    ${grandTotal.toLocaleString('en-IN', {maximumFractionDigits: 2})}
-                </a>
-            </td>`);
-
-            // Add click handler for footer totals
-            $('.footer-total-link').off('click').on('click', function(e) {
-                e.preventDefault();
-                const lender = $(this).data('lender');
-                const viewType = $(this).data('view-type');
-                
-                // Get all data based on the footer total clicked
-                const filteredData = [];
-                table.rows().every(function() {
-                    const rowData = this.data();
-                    const rowLender = rowData[4];
-                    
-                    // Include row if it matches the lender filter (or all lenders)
-                    if (lender === 'all' || rowLender === lender) {
-                        filteredData.push([
-                            rowData[0],  // Phone
-                            rowData[1],  // Disbursed Amount
-                            rowData[2],  // Disbursal Date
-                            rowData[3],  // Status
-                            rowData[4],  // Lender
-                            rowData[5],  // Created At
-                            rowData[6]   // Partner
-                        ]);
-                    }
-                });
-
-                // Generate filename for footer totals
-                const timestamp = new Date().toISOString().split('T')[0];
-                const filePrefix = lender === 'all' ? 'All_Lenders' : lender;
-                const filename = `${filePrefix}_Total_${viewType}_${timestamp}.csv`;
-                
-                // Download CSV
-                downloadAsCSV(filteredData, filename);
-            });
-        }
-
-        // Event handler for download links
-        $(document).on('click', '.download-link', function(e) {
-            e.preventDefault();
-            const month = $(this).data('month');
-            const lender = $(this).data('lender');
-            const viewType = $('#view-type').val();
-            
-            // Collect filtered data
-            const filteredData = [];
-            table.rows({ filter: 'applied' }).every(function() {
-                const rowData = this.data();
-                const rowDate = new Date(rowData[2]); // disbursal date
-                const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
-                const rowLender = rowData[4];
-                const amount = parseFloat(rowData[1]) || 0;
-
-                // Check if row matches the filter criteria
-                if ((month === rowMonth || !month) && 
-                    (lender === rowLender || lender === 'all' || !lender)) {
-                    
-                    let displayValue;
-                    switch(viewType) {
-                        case 'count':
-                            displayValue = 1; // Each row counts as 1
-                            break;
-                        case 'amount':
-                            displayValue = amount;
-                            break;
-                        case 'payout':
-                            displayValue = amount * 0.03;
-                            break;
-                    }
-
-                    filteredData.push({
-                        'Phone Number': rowData[0],
-                        'Disbursed Amount': amount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                        'Value': displayValue,
-                        'Disbursal Date': rowData[2],
-                        'Status': rowData[3],
-                        'Lender': rowData[4],
-                        'Created At': rowData[5],
-                        'Partner': rowData[6]
-                    });
-                }
-            });
-
-            // Sort data by date
-            filteredData.sort((a, b) => new Date(a['Disbursal Date']) - new Date(b['Disbursal Date']));
-
-            // Calculate totals
-            const totalAmount = filteredData.reduce((sum, row) => sum + (parseFloat(row['Disbursed Amount'].replace(/,/g, '')) || 0), 0);
-            const totalValue = filteredData.reduce((sum, row) => sum + (parseFloat(row['Value']) || 0), 0);
-
-            // Add summary row
-            filteredData.push({
-                'Phone Number': 'Total',
-                'Disbursed Amount': totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                'Value': totalValue.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                'Disbursal Date': '',
-                'Status': '',
-                'Lender': '',
-                'Created At': '',
-                'Partner': `Total Records: ${filteredData.length - 1}` // -1 to exclude summary row
-            });
-
-            // Create worksheet
-            const ws = XLSX.utils.json_to_sheet(filteredData);
-
-            // Set column widths
-            ws['!cols'] = [
-                {wch: 15}, // Phone Number
-                {wch: 15}, // Disbursed Amount
-                {wch: 15}, // Value
-                {wch: 12}, // Disbursal Date
-                {wch: 10}, // Status
-                {wch: 12}, // Lender
-                {wch: 12}, // Created At
-                {wch: 15}  // Partner
-            ];
-
-            // Create workbook
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Filtered Data');
-
-            // Generate filename
-            let filename = '';
-            if (month && lender && lender !== 'all') {
-                filename = `${lender}_${month}`;
-            } else if (month) {
-                filename = `All_Lenders_${month}`;
-            } else if (lender && lender !== 'all') {
-                filename = `${lender}_All_Months`;
-            } else {
-                filename = `All_Data`;
-            }
-
-            // Add view type and timestamp
-            const timestamp = new Date().toISOString().split('T')[0];
-            filename = `${filename}_${viewType}_${timestamp}.csv`;
-
-            // Download file
-            XLSX.writeFile(wb, filename);
-        });
-
-        // Add event listener for view type change
-        $('#view-type').on('change', function() {
-            updateSummaryTable();
-        });
-
-        // New function to handle CSV download
-        function downloadAsCSV(data, filename) {
-            // Define headers
-            const headers = [
-                'Phone',
-                'Disbursed Amount',
-                'Disbursal Date',
-                'Status',
-                'Lender',
-                'Created At',
-                'Partner'
-            ];
-
-            // Create CSV content
-            let csvContent = headers.join(',') + '\n';
-
-            // Add data rows
-            data.forEach(row => {
-                const formattedRow = row.map(cell => {
-                    if (cell === null || cell === undefined) {
-                        return '';
-                    }
-                    const cellStr = String(cell);
-                    // Escape quotes and wrap fields containing commas or quotes
-                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
-                        return `"${cellStr.replace(/"/g, '""')}"`;
-                    }
-                    return cellStr;
-                });
-                csvContent += formattedRow.join(',') + '\n';
-            });
-
-            // Create and trigger download
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-
-        // Initial totals calculation on page load
-        updateTotals();
-
-        // Add click handler for download button
-        $('#download-summary-btn').on('click', function() {
-            const viewType = $('#view-type').val();
-            const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `summary_${viewType}_${timestamp}.xlsx`;
-            
-            // Get table data
-            const data = [];
-            const headers = [];
-            
-            // Get headers
-            $('#summary-header th').each(function() {
-                headers.push($(this).text());
-            });
-            
-            // Get row data
-            $('#summary-tbody tr').each(function() {
-                const rowData = {};
-                $(this).find('td').each(function(index) {
-                    // Get the text content, removing any commas and converting to number if needed
-                    const value = $(this).text().replace(/,/g, '');
-                    rowData[headers[index]] = index === 0 ? value : Number(value) || 0;
-                });
-                data.push(rowData);
-            });
-            
-            // Add totals row
-            const totalsRow = {};
-            $('#summary-footer td').each(function(index) {
-                const value = $(this).text().replace(/,/g, '');
-                totalsRow[headers[index]] = index === 0 ? 'Total' : Number(value) || 0;
-            });
-            data.push(totalsRow);
-
-            // Create worksheet
-            const ws = XLSX.utils.json_to_sheet(data);
-            
-            // Set column widths
-            const colWidths = headers.map(() => ({wch: 15}));
-            ws['!cols'] = colWidths;
-
-            // Create workbook and append worksheet
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Summary Data');
-
-            // Download file
-            XLSX.writeFile(wb, filename);
-        });
-
-        // Update the cell click handler
-        $(document).on('click', '.summary-cell-link, .footer-total-link', function(e) {
-            e.preventDefault();
-            const month = $(this).data('month');
-            const lender = $(this).data('lender');
-            const viewType = $('#view-type').val();
-            const selectedPartner = $('#partner-filter').val();
-            
-            // Get filtered data
-            const filteredData = [];
-            table.rows().every(function() {
-                const rowData = this.data();
-                const rowDate = new Date(rowData[2]); // disbursal date
-                const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
-                const rowLender = rowData[4];
-                const rowPartner = rowData[6];
-                const amount = parseFloat(rowData[1]) || 0;
-                
-                // Check if row matches all filter criteria
-                if ((month === rowMonth || !month) && 
-                    (lender === rowLender || lender === 'all' || !lender) &&
-                    (!selectedPartner || rowPartner === selectedPartner)) {
-                    
-                    filteredData.push({
-                        'Phone': rowData[0],
-                        'Disbursed Amount': amount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                        'Disbursal Date': rowData[2],
-                        'Status': rowData[3],
-                        'Lender': rowData[4],
-                        'Created At': rowData[5],
-                        'Partner': rowData[6]
-                    });
-                }
-            });
-
-            // Sort data by date
-            filteredData.sort((a, b) => new Date(a['Disbursal Date']) - new Date(b['Disbursal Date']));
-
-            // Add summary row
-            const totalAmount = filteredData.reduce((sum, row) => 
-                sum + (parseFloat(row['Disbursed Amount'].replace(/,/g, '')) || 0), 0);
-
-            filteredData.push({
-                'Phone': 'Total',
-                'Disbursed Amount': totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
-                'Disbursal Date': '',
-                'Status': '',
-                'Lender': '',
-                'Created At': '',
-                'Partner': `Total Records: ${filteredData.length - 1}`
-            });
-
-            // Generate filename
-            const timestamp = new Date().toISOString().split('T')[0];
-            let filename = '';
-            if (month && lender && lender !== 'all') {
-                filename = `${lender}_${month}`;
-            } else if (month) {
-                filename = `All_Lenders_${month}`;
-            } else if (lender && lender !== 'all') {
-                filename = `${lender}_All_Months`;
-            } else {
-                filename = `All_Data`;
-            }
-            filename = `${filename}_${viewType}_${timestamp}.xlsx`;
-
-            // Create and download Excel file
-            const ws = XLSX.utils.json_to_sheet(filteredData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Filtered Data');
-            XLSX.writeFile(wb, filename);
-        });
-
-        // Remove or comment out any other download-related event handlers
-        // Remove the old downloadAsCSV and downloadExcelFile functions if they're not used elsewhere
-    });
-
-
-
-    // ye neeche wala add kiya hai
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const dynamicDropdownsContainer = document.getElementById('dynamic-dropdowns');
-        const addDropdownBtn = document.getElementById('add-dropdown-btn');
-
-        // Define possible header options
-        const headerOptions = {
-            "Lender": ["All Lenders", "Cashe", "Ramfin", "Fibe", "SmartCoin", "MV", "Mpokket", "MoneyView", "MVCancel"],
-            "Month": ["All Months", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-            "Year": ["All Years", "2020", "2021", "2022", "24", "2024"],  // Adjust years dynamically if needed
-            "Status": ["All Statuses", "Approved", "Pending", "Rejected"],  // Example status options
-            "Partner": ["All Partners", "MoneyTap", "Zype_LS", "None"]  // Added Partner options
-        };
-
-        // Function to add a new dropdown
-        function addNewDropdown() {
-            // Create a container for each dropdown with label and delete button
-            const dropdownContainer = document.createElement('div');
-            dropdownContainer.style.display = 'flex';
-            dropdownContainer.style.alignItems = 'center';
-            dropdownContainer.style.marginBottom = '10px';
-
-            // Create label for dropdown
-            const dropdownLabel = document.createElement('label');
-            dropdownLabel.textContent = 'Select Filter: ';
-            dropdownLabel.style.marginRight = '10px';
-            dropdownContainer.appendChild(dropdownLabel);
-
-            // Create the dropdown itself
-            const newDropdown = document.createElement('select');
-            newDropdown.style.marginRight = '10px';
-
-            // Populate dropdown with header options
-            Object.keys(headerOptions).forEach(header => {
-                const option = document.createElement('option');
-                option.value = header;
-                option.textContent = header;
-                newDropdown.appendChild(option);
-            });
-
-            // Append the dropdown to the container
-            dropdownContainer.appendChild(newDropdown);
-
-            // Create a secondary dropdown to hold the values of the selected header
-            const valueDropdown = document.createElement('select');
-            valueDropdown.style.marginRight = '10px';
-            dropdownContainer.appendChild(valueDropdown);
-
-            // Event listener to update value dropdown when a header is selected
-            newDropdown.addEventListener('change', function () {
-                const selectedHeader = newDropdown.value;
-                const values = headerOptions[selectedHeader];
-
-                // Clear any existing options
-                valueDropdown.innerHTML = '';
-
-                // Add the values based on selected header
-                values.forEach(value => {
-                    const valueOption = document.createElement('option');
-                    valueOption.value = value;
-                    valueOption.textContent = value;
-                    valueDropdown.appendChild(valueOption);
-                });
-            });
-
-            // Delete button to remove this dropdown
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'x';
-            deleteButton.style.marginLeft = '10px';
-            deleteButton.addEventListener('click', function () {
-                dropdownContainer.remove();
-            });
-            dropdownContainer.appendChild(deleteButton);
-
-            // Add the dropdown container to the main dynamic dropdowns container
-            dynamicDropdownsContainer.appendChild(dropdownContainer);
-        }
-
-        // Add initial dropdown on page load
-        addDropdownBtn.addEventListener('click', addNewDropdown);
-    });
-
-
-
-
-
-    // Show the modal
-    function showModal() {
-        document.getElementById("emailModal").style.display = "block";
-    }
-
-    // Close the modal
-    function closeModal() {
-        document.getElementById("emailModal").style.display = "none";
-    }
-
-    // Close the modal if clicked outside
-    window.onclick = function (event) {
-        const modal = document.getElementById("emailModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    // Function to highlight duplicate phone numbers
-    function checkDuplicates() {
-        const table = $('#data-table').DataTable();
-        const phoneMap = new Map();
-        
-        // Reset previous highlighting
-        table.rows().every(function() {
-            $(this.node()).find('td:first').removeClass('duplicate-highlight');
-        });
-
-        // First pass: collect phone numbers from first column
-        table.rows().every(function() {
-            const phone = this.data()[0]?.toString().trim(); // Get first column (Phone)
-            
-            if (phone) {
-                if (phoneMap.has(phone)) {
-                    phoneMap.set(phone, phoneMap.get(phone) + 1);
-                } else {
-                    phoneMap.set(phone, 1);
-                }
-            }
-        });
-
-        // Second pass: highlight duplicates and count them
-        let duplicateCount = 0;
-        table.rows().every(function() {
-            const phone = this.data()[0]?.toString().trim();
-            
-            if (phone && phoneMap.get(phone) > 1) {
-                // Find and highlight the phone cell (first column)
-                const row = $(this.node());
-                const phoneCell = row.find('td:first');
-                
-                // Apply highlighting class
-                phoneCell.addClass('duplicate-highlight');
-                
-                // Add animation class
-                phoneCell.addClass('highlight-duplicate');
-                
-                // Remove animation class after animation completes
-                setTimeout(() => {
-                    phoneCell.removeClass('highlight-duplicate');
-                }, 2000);
-            }
-        });
-
-        // Count unique duplicate numbers
-        duplicateCount = Array.from(phoneMap.entries())
-            .filter(([_, count]) => count > 1).length;
-
-        // Show alert with duplicate count
-        if (duplicateCount > 0) {
-            showDuplicatePopup(duplicateCount);
-        } else {
-            alert('No duplicate numbers found.');
-        }
-    }
-
-    // Add event listener
-    $(document).ready(function() {
-        $('#check-duplicates').on('click', checkDuplicates);
-    });
-
-    // Function to show duplicate popup
-    function showDuplicatePopup(duplicateCount) {
-        const popup = document.getElementById('duplicate-popup');
-        const message = document.getElementById('duplicate-message');
-        const viewDuplicatesLink = document.getElementById('view-duplicates-link');
-
-        message.textContent = `Found ${duplicateCount} phone numbers with duplicates.`;
-        viewDuplicatesLink.href = '#';
-        viewDuplicatesLink.addEventListener('click', function() {
-            showDuplicatesModal();
-        });
-
-        popup.style.display = 'block';
-    }
-
-    // Function to close duplicate popup
-    function closeDuplicatePopup() {
-        const popup = document.getElementById('duplicate-popup');
-        popup.style.display = 'none';
-    }
-
-    // Function to show duplicates modal
-    function showDuplicatesModal() {
-        const table = $('#data-table').DataTable();
-        const phoneMap = new Map();
-        
-        // Collect phone numbers and their occurrences
-        table.rows().every(function() {
-            const phone = this.data()[0]?.toString().trim(); // Get first column (Phone)
-            
-            if (phone) {
-                if (phoneMap.has(phone)) {
-                    phoneMap.set(phone, phoneMap.get(phone) + 1);
-                } else {
-                    phoneMap.set(phone, 1);
-                }
-            }
-        });
-
-        // Filter out non-duplicate numbers
-        const duplicates = Array.from(phoneMap.entries())
-            .filter(([_, count]) => count > 1)
-            .map(([phone, count]) => ({ phone, count }));
-
-        // Sort duplicates by count in descending order
-        duplicates.sort((a, b) => b.count - a.count);
-
-        // Create table for duplicates
-        const duplicateTable = document.createElement('table');
-        duplicateTable.id = 'duplicate-table';
-        duplicateTable.className = 'display';
-
-        // Create table header
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        const headers = ['Phone', 'Count'];
-        headers.forEach(headerText => {
-            const th = document.createElement('th');
-            th.textContent = headerText;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        duplicateTable.appendChild(thead);
-
-        // Create table body
-        const tbody = document.createElement('tbody');
-        duplicates.forEach(duplicate => {
-            const row = document.createElement('tr');
-            const phoneCell = document.createElement('td');
-            phoneCell.textContent = duplicate.phone;
-            row.appendChild(phoneCell);
-            const countCell = document.createElement('td');
-            countCell.textContent = duplicate.count;
-            row.appendChild(countCell);
-            tbody.appendChild(row);
-        });
-        duplicateTable.appendChild(tbody);
-
-        // Create table footer
-        const tfoot = document.createElement('tfoot');
-        const footerRow = document.createElement('tr');
-        const footerCell = document.createElement('td');
-        footerCell.colSpan = 2;
-        footerCell.textContent = `Total Duplicates: ${duplicates.length}`;
-        footerRow.appendChild(footerCell);
-        tfoot.appendChild(footerRow);
-        duplicateTable.appendChild(tfoot);
-
-        // Create modal content
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        modalContent.appendChild(duplicateTable);
-
-        // Create modal
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.appendChild(modalContent);
-
-        // Add modal to body
-        document.body.appendChild(modal);
-
-        // Initialize DataTable
-        $(duplicateTable).DataTable({
-            paging: true,
-            ordering: true,
-            info: true,
-            searching: true,
-            lengthChange: true,
-            pageLength: 10,
-            dom: 'Bfrtip',
-            buttons: [
-                {
-                    extend: 'csv',
-                    text: 'Download CSV',
-                    className: 'btn btn-primary',
-                    exportOptions: {
-                        columns: ':visible'
-                    }
-                }
-            ]
-        });
-
-        // Show modal
-        $(modal).modal('show');
-
-        // Remove modal when closed
-        $(modal).on('hidden.bs.modal', function () {
-            $(this).remove();
-        });
-    }
-
-// Function to update partner information with batch processing
-async function updatePartnerInfo() {
-    const table = $('#data-table').DataTable();
-    const loadingDiv = $('<div>Requesting partner info for phones...</div>')
-        .css({
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            padding: '20px',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            borderRadius: '5px',
-            zIndex: 9999
-        });
-    
-    $('body').append(loadingDiv);
-
-    try {
-        // Collect all phone numbers
-        const allPhones = [];
-        table.rows().every(function() {
-            const phone = this.data()[0];
-            if (phone) allPhones.push(phone.toString().trim());
-        });
-
-        if (allPhones.length === 0) {
-            throw new Error('No phone numbers found in table');
-        }
-
-        // Process in larger batches
-        const batchSize = 5000; // Increased batch size
-        const batches = [];
-        for (let i = 0; i < allPhones.length; i += batchSize) {
-            batches.push(allPhones.slice(i, i + batchSize));
-        }
-
-        // Process all batches concurrently
-        loadingDiv.text(`Requesting partner info for phones...`);
-        
-        const batchPromises = batches.map(async (batch, index) => { 
-            try {
-                const batchData = await getPartnerInfo(batch);
-                loadingDiv.text(`Completed batch ${index + 1}/${batches.length}`);
-                return batchData;
-            } catch (error) {
-                console.error(`Error in batch ${index + 1}:`, error);
-                return {};
-            }
-        });
-
-        // Wait for all batches to complete
-        const batchResults = await Promise.all(batchPromises);
-        
-        // Merge all batch results
-        const partnerInfo = Object.assign({}, ...batchResults);
-
-        // Update table with all partner info at once
-        let updatedCount = 0;
-        table.rows().every(function() {
-            const phone = this.data()[0].toString().trim();
-            if (partnerInfo[phone]) {
-                const partner = partnerInfo[phone].partner;
-                const row = $(this.node());
-                const partnerCell = row.find('td:last');
-                partnerCell.text(partner);
-                updatedCount++;
-            }
-        });
-
-//         table.draw(false);
-//         alert(`Partner information updated successfully:
-// - Total records: ${allPhones.length}
-// - Updated records: ${updatedCount}
-// - Batches processed: ${batches.length}`);
-
-    } catch (error) {
-        console.error('Update failed:', error);
-        alert(`Failed to update partner information: ${error.message}`);
-    } finally {
-        loadingDiv.remove();
-    }
-}
-
-// Helper function to get partner info with timeout and retry
-async function getPartnerInfo(phones) {
-    const maxRetries = 3;
-    const timeout = 30000; // 30 seconds timeout
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-            const response = await fetch('/api/internal/get-partner-info', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ phones }),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            if (attempt === maxRetries) {
-                throw error;
-            }
-            console.warn(`Attempt ${attempt} failed, retrying...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-    }
-}
-
-// Function for "All Fields" button
-async function updateAllFields() {
-    const table = $('#data-table').DataTable();
-    const loadingDiv = $('<div>Sending partner data to database...</div>')
-        .css({
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            padding: '20px',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            borderRadius: '5px',
-            zIndex: 9999
-        });
-    
-    $('body').append(loadingDiv);
-
-    try {
-        // Collect all phone numbers and their current partner info
-        const partnerData = {};
-        table.rows().every(function() {
-            const rowData = this.data();
-            const phone = rowData[0];
-            const partner = $(this.node()).find('td:last').text();
-            if (phone && partner) {
-                partnerData[phone] = { partner: partner };
-            }
-        });
-
-        if (Object.keys(partnerData).length === 0) {
-            throw new Error('No partner data found to update');
-        }
-
-        // Update database
-        const result = await updateDatabase(partnerData);
-        
-//         alert(`Database update complete:
-// - Records processed: ${Object.keys(partnerData).length}
-// - Records updated: ${result.updatedCount}
-// ${result.message}`);
-
-    } catch (error) {
-        console.error('Database update failed:', error);
-        alert(`Failed to update database: ${error.message}`);
-    } finally {
-        loadingDiv.remove();
-    }
-}
-
-// Helper function to update database
-async function updateDatabase(partnerData) {
-    try {
-        console.log('Attempting to update database with partner data:', partnerData);
-        
-        const response = await fetch('/api/internal/update-partners', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ partnerData }),
-            credentials: 'same-origin'
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            console.error('Server Error:', result);
-            throw new Error(result.message || 'Failed to update database');
-        }
-
-        // Log success information
-        console.log('Database update successful:', result);
-        if (result.updates) {
-            console.log('Updated records:');
-            Object.entries(result.updates).forEach(([phone, update]) => {
-                console.log(`Phone: ${phone}`);
-                console.log(`- Old partner: ${update.old_partner || 'None'}`);
-                console.log(`- New partner: ${update.new_partner}`);
-            });
-        }
-
-        return result;
-
-    } catch (error) {
-        console.error('Database Update Error:', error);
-        alert(`Failed to update database: ${error.message}`);
-        throw error;
-    }
-}
-
-// Helper function to get partner information from API
-async function getPartnerInfo(phones) {
-    try {
-        const API_ENDPOINT = '/api/internal/get-partners';
-        
-        console.log('Requesting partner info for phones:', phones);
-        
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ phones }),
-            credentials: 'same-origin'
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error Response:', {
-                status: response.status,
-                statusText: response.statusText,
-                body: errorText
-            });
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        // Transform the response data to match the expected format
-        const transformedData = {};
-        for (const item of data) {
-            if (item.phone && item.partner) {
-                transformedData[item.phone] = { partner: item.partner };
-            }
-        }
-        
-        console.log('Partner data received:', transformedData);
-        return transformedData;
-
-    } catch (error) {
-        console.error('Partner API Error:', error);
-        return phones.reduce((acc, phone) => {
-            acc[phone] = { partner: 'Unknown' };
-            return acc;
-        }, {});
-    }
-}
-
-// Add event listeners to buttons
-document.addEventListener('DOMContentLoaded', function() {
-    // Update Partner Info button
-    document.querySelector('#updatePartnerBtn').addEventListener('click', updatePartnerInfo);
-    
-    // All Fields button
-    document.querySelector('#allFieldsBtn').addEventListener('click', updateAllFields);
-});
-
-// Add event listener for partner filter
-$('#partner-filter').on('change', function() {
-    updateSummaryTable();
-});
-
-$(document).ready(function() {
-    $('#check-duplicates-btn').on('click', function() {
-        const table = $('#data-table').DataTable();
-        const phoneNumbers = new Map();
-        
-        // Count duplicate phone numbers
-        table.rows({ filter: 'applied' }).every(function() {
-            const phone = this.data()[0];
-            phoneNumbers.set(phone, (phoneNumbers.get(phone) || 0) + 1);
-        });
-        
-        // Count numbers that appear more than once
-        const duplicateCount = Array.from(phoneNumbers.values()).filter(count => count > 1).length;
-        
-        // Show popup with count
-        const popup = document.getElementById('duplicate-popup');
-        const message = document.getElementById('duplicate-count-message');
-        message.textContent = `Found ${duplicateCount} phone numbers with duplicates.`;
-        popup.style.display = 'block';
-        
-        // Handle OK button click
-        popup.querySelector('.ok-button').onclick = function() {
-            popup.style.display = 'none';
-        };
-        
-        // Handle View Duplicates link click
-        document.getElementById('view-duplicates-link').onclick = function(e) {
-            e.preventDefault();
-            popup.style.display = 'none';
-            $('#duplicate-btn').click(); // Trigger the view duplicates modal
-        };
-        
-        // Close popup when clicking outside
-        window.onclick = function(event) {
-            if (event.target == popup) {
-                popup.style.display = 'none';
-            }
-        };
-    });
-});
-</script>
-</body> 
 </html>
