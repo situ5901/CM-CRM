@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --bg-light: #f8f9fa;
+            --border-color: #e9ecef;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            padding: 2rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            margin: 0.2rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            background: #f0f7ff;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        /* Header Section */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0 0 0.8rem 0;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Upload Section */
+        .upload-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        .recent-uploads {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Form Elements */
+        .file-group {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Recent Uploads List */
+        .upload-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .upload-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .upload-item:last-child {
+            border-bottom: none;
+        }
+
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .upload-details {
+            flex: 1;
+        }
+
+        .upload-name {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+        }
+
+        .upload-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .secContent {
+            border-top-left-radius: 25px;
+            padding: 20px;
+            background-color: #012141;
+            width: 20%;
+            justify-content: center;
+        }
+
+        .vertical-nav {
+            width: 210px;
+            background: #2c3e50;
+            padding: 30px 0;
+            border-radius: 10px;
+        }
+
+        .vertical-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .vertical-nav li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .vertical-nav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .vertical-nav a:hover {
+            background: #34495e;
+            padding-left: 30px;
+        }
+
+        .vertical-nav i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .vertical-nav span {
+            font-size: 16px;
+        }
+
+        /* Active link styling */
+        .vertical-nav a.active {
+            background: #3498db;
+            border-left: 4px solid #2980b9;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .vertical-nav {
+                width: 100%;
+            }
+            
+            .vertical-nav span {
+                display: none;
+            }
+            
+            .vertical-nav a {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .vertical-nav i {
+                margin: 0;
+                font-size: 20px;
+            }
+        }
+
+        .containers{
+            display: flex;
+            padding: 20px;
+            width: 100%;
+        }
+    </style>
+    <script>
+        function addFileInput() {
+            const fileInputContainer = document.getElementById("file-input-container");
+            const fileGroup = document.createElement("div");
+            fileGroup.classList.add("file-group");
+
+            const lenderLabel = document.createElement("label");
+            lenderLabel.innerHTML = '<i class="fas fa-building"></i> Select Lender:';
+            const lenderSelect = document.createElement("select");
+            lenderSelect.name = "lender";
+            lenderSelect.required = true;
+            lenderSelect.innerHTML = `
+                <option value="Cashe">Cashe</option>
+                <option value="MoneyView">MoneyView</option>
+                <option value="Prefer">Prefer</option>
+                <option value="SmartCoin">SmartCoin</option>
+                <option value="MVCancel">MVCancel</option>
+                <option value="Ramfin">Ramfin</option>
+                <option value="Mpokket">Mpokket</option>
+            `;
+
+            const fileLabel = document.createElement("label");
+            fileLabel.innerText = "Upload CSV or Excel file:";
+            const newInput = document.createElement("input");
+            newInput.type = "file";
+            newInput.name = "file";
+            newInput.accept = ".csv, .xlsx";
+            newInput.required = true;
+            newInput.onchange = function() {
+                updateRecordCount(this);
+            };
+
+            const recordCountSpan = document.createElement("span");
+            recordCountSpan.classList.add("record-count");
+            recordCountSpan.innerHTML = '<i class="fas fa-table"></i> <span>0 records</span>';
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.classList.add("delete-btn");
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            deleteButton.onclick = function() {
+                fileInputContainer.removeChild(fileGroup);
+            };
+
+            fileGroup.appendChild(lenderLabel);
+            fileGroup.appendChild(lenderSelect);
+            fileGroup.appendChild(fileLabel);
+            fileGroup.appendChild(newInput);
+            fileGroup.appendChild(recordCountSpan);
+            fileGroup.appendChild(deleteButton);
+
+            fileInputContainer.appendChild(fileGroup);
+        }
+
+        function updateRecordCount(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const lines = content.split(/\r\n|\n/);
+                    const totalCount = lines.length - 1; // Assuming the first line is the header
+                    input.nextElementSibling.innerText = `${totalCount} records`;
+                };
+                reader.readAsText(file);
+            }
+            
+        }
+    </script>
+</head>
+<body>
+    <div class="containers">
+        <!-- Sidebar -->
+        <div class="secContent">
+            <div class="navbarsec">
+                <h1 style="color: white;text-align: center;">Hello, {{ username }}</h1>
+                <nav class="vertical-nav">
+                    <ul>
+                        <li>
+                            <a href="/home">
+                                <i class="fas fa-home"></i>
+                                <span>Home</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/dashboard">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/attendance">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Attendance</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/settings">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/data_upload">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload Data</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Data Upload Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Uploads</h3>
+                    <div class="value">1,234</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Today's Uploads</h3>
+                    <div class="value">42</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Success Rate</h3>
+                    <div class="value">98%</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Records</h3>
+                    <div class="value">85K</div>
+                </div>
+            </div>
+
+            <!-- Upload Container -->
+            <div class="upload-container">
+                <!-- Upload Form Section -->
+                <div class="upload-section">
+                    <h2 class="section-title">Upload Files</h2>
+                    <form action="{{ url_for('data_upload') }}" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="collection_type">
+                                <i class="fas fa-database"></i> Select Data Type
+                            </label>
+                            <select name="collection_type" id="collection_type" required>
+                                <option value="">Choose data type...</option>
+                                <option value="users">Users</option>
+                                <option value="mis">MIS</option>
+                            </select>
+                        </div>
+
+                        <div id="file-input-container">
+                            <!-- File groups will be added here -->
+                        </div>
+
+                        <div class="button-group">
+                            <button type="button" class="btn btn-outline" onclick="addFileInput()">
+                                <i class="fas fa-plus"></i> Add File
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Recent Uploads Section -->
+                <div class="recent-uploads">
+                    <h2 class="section-title">Recent Uploads</h2>
+                    <ul class="upload-list">
+                        <li class="upload-item">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="upload-details">
+                                <div class="upload-name">Users_Data.xlsx</div>
+                                <div class="upload-info">2 minutes ago • 1.2MB</div>
+                            </div>
+                        </li>
+                        <li class="upload-item">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <div class="upload-details">
+                                <div class="upload-name">MIS_Report.csv</div>
+                                <div class="upload-info">1 hour ago • 856KB</div>
+                            </div>
+                        </li>
+                        <!-- Add more recent uploads as needed -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep your existing JavaScript -->
+</body>
+</html>

@@ -1,0 +1,1296 @@
+/* Main container with fixed size and centered alignment */
+.container {
+    display: flex;
+    width: 1200px; /* Fixed width for the page */
+    min-height: 90vh; /* Minimum height for the page */
+    margin: 20px auto; /* Center align the container */
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2); /* Add shadow around the container */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Sidebar styling */
+.sidebar {
+    width: 220px; /* Fixed width for sidebar */
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    color: #ffd700;
+}
+
+.sidebar a {
+    color: #ddd;
+    text-decoration: none;
+    display: block;
+    margin: 10px 0;
+}
+
+.sidebar a:hover {
+    color: #fff;
+}
+
+/* Sidebar navigation table */
+.sidebar table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sidebar table td {
+    padding: 10px;
+    text-align: center;
+}
+
+.sidebar table td a {
+    color: #ddd;
+    text-decoration: none;
+    font-size: 18px;
+    display: block;
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.sidebar table td a:hover {
+    background-color: #444;
+}
+
+/* Right content area */
+
+/* Content box with shadow */
+.content-box {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.content {
+    flex: 1;
+    background-color: #f4f4f4;
+}
+
+.content h2 {
+    text-align: start;
+    color: #333;
+    animation: gradientText 8s infinite;
+}
+
+.content p {
+    font-size: 18px;
+    color: #666;
+}
+
+/* Welcome message on the top right corner */
+.welcome-message {
+    text-align: right;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+/* Login Page Centered Box */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.login-box {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    width: 120px;
+    height: auto;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background: #0056b3;
+}
+
+.error-message {
+    background: #ffe6e6;
+    color: #d63031;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-align: center;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Top header bar */
+.header-bar {
+    width: 100%;
+    background-color: #1e88e5;
+    padding: 10px;
+    text-align: center;
+}
+
+.header-bar h1 {
+    color: #fff;
+    font-size: 24px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.header-bar .highlight {
+    color: #ff8c00;
+}
+
+/* Centered login container */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 40px 0;
+}
+
+/* Login box with shadow */
+.login-box {
+    background-color: #fff;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+}
+
+/* Icon above the login box */
+.icon {
+    background-color: #1e88e5;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -40px auto 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icon img {
+    width: 30px;
+    height: 30px;
+}
+
+/* Error message */
+.error-message {
+    background-color: #ffcccc;
+    color: #d32f2f;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: none; /* Set to display: block; to show it */
+}
+
+/* Form styling */
+.login-box h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.login-box label {
+    display: block;
+    text-align: left;
+    font-size: 15  px;
+    color: #555;
+    margin-top: 10px;
+}
+
+.login-box input[type="text"],
+.login-box input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-container button:hover {
+    background-color: #555;
+}
+/* Adjusting the size of the logo */
+.logo {
+    width: 100px; /* Adjust the width as needed */
+    height: auto; /* This will maintain the aspect ratio */
+}
+/* Logo background styling */
+.logo-background {
+    display: inline-block;
+    padding: 40px;                  /* Space around the logo */
+    background-color: #e2e2e2;      /* Light grey background */
+    border-radius: 12%;             /* Circle background around logo */
+}
+/* Container Styling */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0px;
+    font-family: Arial, sans-serif;
+}
+
+/* Data Table Styling */
+.data-table {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    overflow-x: auto;
+}
+
+table.data {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.welcome-message {
+    text-align: right;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+/* Flip Container */
+.flip-container {
+    perspective: 1000px;
+}
+
+/* Flipper for 3D rotation */
+.flipper {
+    transition: 0.8s;
+    transform-style: preserve-3d;
+}
+
+/* Flip animation when class "flip" is added */
+.flipper.flip {
+    transform: rotateY(180deg);
+}
+
+/* Flip Page */
+.flip-page {
+    backface-visibility: hidden;
+    position: relative;
+}
+
+/* Back page for the flipping effect */
+.flip-page, .flipper.flip .flip-page {
+    transform: rotateY(0deg);
+}   
+
+/* Basic styling for container */
+/* .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+} */
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="file"],
+select,
+button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #28a745;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Flash messages */
+.flash-messages {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #ffcccc;
+    color: #d32f2f;
+    border-radius: 5px;
+    list-style-type: none;
+}
+/* Upload Button styling */
+.upload-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+    background-color: #218838;
+
+}
+
+/* Container styling for home page */
+/* .container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background-color: #ffffff;
+} */
+
+/* Heading style */
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Upload Button styling */
+.upload-button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+.upload-button:hover {
+    background-color: #218838;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #1a1a2e;
+    color: #fff;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style-type: none;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.sidebar ul li a:hover {
+    color: #00aaff;
+}
+
+.submenu {
+    margin-left: 20px;
+}
+
+
+.header {
+    background-color: #4b7bec;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.report-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filters label,
+.filters select,
+.filters button {
+    margin-right: 10px;
+}
+
+.filters button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.filters button:hover {
+    background-color: #218838;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.attendance-table th,
+.attendance-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.attendance-table th {
+    background-color: #4b7bec;
+    color: white;
+}
+
+.attendance-table .off {
+    background-color: #ffcccc;
+}
+
+.attendance-table .present {
+    background-color: #ccffcc;
+}
+
+.settings-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.settings-container h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.change-password-section,
+.create-user-section {
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+.rights-section label {
+    display: inline-block;
+    margin-right: 15px;
+    font-size: 14px;
+}
+
+@keyframes gradientText {
+    0% { color: #333; }
+    25% { color: #bc0ec8; }
+    50% { color: #43cea2; }
+    75% { color: #e1e10e; }
+    100% { color: #dd0909; }
+}
+
+/* Main container with fixed size and centered alignment */
+.container {
+    display: flex;
+    width: 1200px; /* Fixed width for the page */
+    min-height: 90vh; /* Minimum height for the page */
+    margin: 20px auto; /* Center align the container */
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2); /* Add shadow around the container */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Sidebar styling */
+.sidebar {
+    width: 220px; /* Fixed width for sidebar */
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    color: #ffd700;
+}
+
+.sidebar a {
+    color: #ddd;
+    text-decoration: none;
+    display: block;
+    margin: 10px 0;
+}
+
+.sidebar a:hover {
+    color: #fff;
+}
+
+/* Sidebar navigation table */
+.sidebar table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sidebar table td {
+    padding: 10px;
+    text-align: center;
+}
+
+.sidebar table td a {
+    color: #ddd;
+    text-decoration: none;
+    font-size: 18px;
+    display: block;
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.sidebar table td a:hover {
+    background-color: #444;
+}
+
+/* Right content area */
+
+/* Content box with shadow */
+.content-box {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.content {
+    flex: 1;
+    background-color: #f4f4f4;
+}
+
+.content h2 {
+    text-align: start;
+    color: #333;
+}
+
+.content p {
+    font-size: 18px;
+    color: #666;
+}
+
+/* Welcome message on the top right corner */
+.welcome-message {
+    text-align: right;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+/* Login Page Centered Box */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.login-box {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    width: 120px;
+    height: auto;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background: #0056b3;
+}
+
+.error-message {
+    background: #ffe6e6;
+    color: #d63031;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-align: center;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Top header bar */
+.header-bar {
+    width: 100%;
+    background-color: #1e88e5;
+    padding: 10px;
+    text-align: center;
+}
+
+.header-bar h1 {
+    color: #fff;
+    font-size: 24px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.header-bar .highlight {
+    color: #ff8c00;
+}
+
+/* Centered login container */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 40px 0;
+}
+
+/* Login box with shadow */
+.login-box {
+    background-color: #fff;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+}
+
+/* Icon above the login box */
+.icon {
+    background-color: #1e88e5;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -40px auto 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icon img {
+    width: 30px;
+    height: 30px;
+}
+
+/* Error message */
+.error-message {
+    background-color: #ffcccc;
+    color: #d32f2f;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: none; /* Set to display: block; to show it */
+}
+
+/* Form styling */
+.login-box h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.login-box label {
+    display: block;
+    text-align: left;
+    font-size: 15  px;
+    color: #555;
+    margin-top: 10px;
+}
+
+.login-box input[type="text"],
+.login-box input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-container button:hover {
+    background-color: #555;
+}
+/* Adjusting the size of the logo */
+.logo {
+    width: 100px; /* Adjust the width as needed */
+    height: auto; /* This will maintain the aspect ratio */
+}
+/* Logo background styling */
+.logo-background {
+    display: inline-block;
+    padding: 40px;                  /* Space around the logo */
+    background-color: #e2e2e2;      /* Light grey background */
+    border-radius: 12%;             /* Circle background around logo */
+}
+/* Container Styling */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0px;
+    font-family: Arial, sans-serif;
+}
+
+/* Data Table Styling */
+.data-table {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    overflow-x: auto;
+}
+
+table.data {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.welcome-message {
+    text-align: right;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+/* Flip Container */
+.flip-container {
+    perspective: 1000px;
+}
+
+/* Flipper for 3D rotation */
+.flipper {
+    transition: 0.8s;
+    transform-style: preserve-3d;
+}
+
+/* Flip animation when class "flip" is added */
+.flipper.flip {
+    transform: rotateY(180deg);
+}
+
+/* Flip Page */
+.flip-page {
+    backface-visibility: hidden;
+    position: relative;
+}
+
+/* Back page for the flipping effect */
+.flip-page, .flipper.flip .flip-page {
+    transform: rotateY(0deg);
+}   
+
+/* Basic styling for container */
+/* .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+} */
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="file"],
+select,
+button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #28a745;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Flash messages */
+.flash-messages {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #ffcccc;
+    color: #d32f2f;
+    border-radius: 5px;
+    list-style-type: none;
+}
+/* Upload Button styling */
+.upload-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+    background-color: #218838;
+
+}
+
+/* Container styling for home page */
+/* .container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background-color: #ffffff;
+} */
+
+/* Heading style */
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Upload Button styling */
+.upload-button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+.upload-button:hover {
+    background-color: #218838;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #1a1a2e;
+    color: #fff;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style-type: none;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.sidebar ul li a:hover {
+    color: #00aaff;
+}
+
+.submenu {
+    margin-left: 20px;
+}
+
+.main-content {
+    flex-grow: 1;
+    background-color: #f4f4f9;
+    width: 100%;
+    padding: 20px;
+}
+
+.header {
+    background-color: #4b7bec;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.report-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filters label,
+.filters select,
+.filters button {
+    margin-right: 10px;
+}
+
+.filters button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.filters button:hover {
+    background-color: #218838;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.attendance-table th,
+.attendance-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.attendance-table th {
+    background-color: #4b7bec;
+    color: white;
+}
+
+.attendance-table .off {
+    background-color: #ffcccc;
+}
+
+.attendance-table .present {
+    background-color: #ccffcc;
+}
+
+.settings-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.settings-container h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.change-password-section,
+.create-user-section {
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+.rights-section label {
+    display: inline-block;
+    margin-right: 15px;
+    font-size: 14px;
+}

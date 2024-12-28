@@ -1,0 +1,3314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        #popup {
+            display: none;
+            /* Initially hidden */
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: red;
+            /* Green background */
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .download-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: orange;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #table-view-btn {
+            margin-left: 10px;
+        }
+
+        .popmodel {
+            display: flex;
+            text-align: center;
+        }
+
+        .hone {
+            width: 50%;
+        }
+
+        .htwo {
+            width: 50%;
+        }
+        .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        font-size: 16px;
+        display: none;
+        z-index: 9999;
+    }
+
+    /* Loading indicator styling */
+    .loading-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border-radius: 5px;
+        display: none;
+        z-index: 10000;
+    }
+
+    .download-link {
+        color: #007bff;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .download-link:hover {
+        color: #0056b3;
+    }
+
+    #check-duplicates-btn, #duplicate-btn {
+        padding: 8px 15px;
+        margin: 0 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #check-duplicates-btn {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    #duplicate-btn {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    #duplicateModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 1200px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #duplicate-table {
+        width: 100%;
+    }
+
+    #duplicate-table td {
+        vertical-align: top;
+        padding: 8px;
+    }
+
+    #duplicate-table .details-cell {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    #duplicateModal .modal-content {
+        background-color: #fefefe;
+        margin: 2% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 95%;
+        max-width: 1400px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    #duplicate-table {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    #duplicate-table th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    #duplicate-table td {
+        vertical-align: top;
+        padding: 12px;
+    }
+
+    #duplicate-table td:nth-child(2) {
+        text-align: center;
+    }
+
+    .details-cell {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 4px;
+    }
+
+    /* Style for the export buttons */
+    .dt-buttons {
+        margin-bottom: 15px;
+    }
+
+    .dt-button {
+        padding: 6px 12px;
+        margin-right: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+    }
+
+    .dt-button:hover {
+        background-color: #f0f0f0;
+    }
+
+    #download-duplicates-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #download-duplicates-btn:hover {
+        background-color: #45a049;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    #download-duplicates-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+    }
+
+    #download-duplicates-btn:hover {
+        background-color: #218838;
+    }
+
+    #download-duplicates-btn i {
+        font-size: 16px;
+    }
+
+    #summary-table thead th:first-child {
+        cursor: pointer;
+        position: relative;
+    }
+
+    #summary-table thead th:first-child:after {
+        content: '↕';
+        position: absolute;
+        right: 8px;
+        opacity: 0.5;
+    }
+
+    #summary-table thead th:first-child.sorting_asc:after {
+        content: '↑';
+        opacity: 1;
+    }
+
+    #summary-table thead th:first-child.sorting_desc:after {
+        content: '↓';
+        opacity: 1;
+    }
+
+    .sortable {
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .sortable:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .sort-asc::after {
+        content: ' ↑';
+    }
+    
+    .sort-desc::after {
+        content: ' ↓';
+    }
+
+    .highlight-duplicate {
+        animation: highlight 1s ease-in-out;
+    }
+
+    @keyframes highlight {
+        0% { background-color: #ffeb3b; }
+        100% { background-color: transparent; }
+    }
+
+    #check-duplicates {
+        margin: 10px;
+        padding: 8px 15px;
+    }
+
+    #duplicate-count {
+        font-weight: bold;
+    }
+
+    /* Animation for highlighting */
+    @keyframes highlightFade {
+        from { background-color: #ffebee; }
+        to { background-color: transparent; }
+    }
+
+    .highlight-duplicate {
+        animation: highlightFade 2s ease-in-out;
+    }
+
+    .duplicate-highlight {
+        background-color: #ffe6e6 !important;
+        color: red !important;
+        font-weight: bold !important;
+    }
+
+    #check-duplicates {
+        margin: 10px;
+        padding: 8px 15px;
+    }
+
+    #duplicate-count {
+        font-weight: bold;
+    }
+
+    .chart-control {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 150px;
+    }
+    
+    .visualization-section {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+    }
+    
+    canvas {
+        background-color: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .chart-control {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 180px;
+        background-color: white;
+    }
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .chart-wrapper {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .download-chart-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .download-chart-btn:hover {
+        background-color: #45a049;
+    }
+
+    .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    canvas {
+        width: 100% !important;
+        max-height: 400px;
+    }
+</style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Sidebar content... -->
+
+        <!-- Main content area with shadow box -->
+        <div class="content">
+            <div class="content-box">
+                <div class="welcome-message">Hello, {{ username }}</div>
+                <h2>Dashboard</h2>
+
+                <!-- Table View Button -->
+                <button id="table-view-btn">Table View</button>
+                <button id="all-fields-btn">All Fields</button>
+
+                <!-- Send Email Button -->
+                
+                <!-- <form method="POST" action="/dashboard">
+                    <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                        Send Report via Email
+                    </button>
+                </form> -->
+
+
+                <button id="send-email-button" class="btn btn-primary" style="margin-top: 20px;">
+                    Send Email
+                </button>
+                
+                <!-- Loading Indicator (hidden initially) -->
+                <div id="loading-indicator" class="loading-popup" style="display: none;">
+                    Sending Email...
+                </div>
+                
+                <!-- Success popup div -->
+                <div id="success-message" class="success-popup" style="display: none;">
+                    Success!
+                </div>
+
+
+                <script>
+                    document.getElementById('send-email-button').addEventListener('click', function () {
+                        // Show loading indicator while the request is in progress
+                        document.getElementById('loading-indicator').style.display = 'block';
+                
+                        fetch('/dashboard', {
+                            method: 'POST',
+                        })
+                        .then(response => {
+                            // Hide the loading indicator
+                            document.getElementById('loading-indicator').style.display = 'none';
+                
+                            if (response.ok) {
+                                // Show success message in popup
+                                document.getElementById('success-message').style.display = 'block';
+                
+                                // Hide the popup after 3 seconds
+                                setTimeout(function() {
+                                    document.getElementById('success-message').style.display = 'none';
+                                }, 3000);
+                            } else {
+                                response.text().then(text => alert(`Error sending email: ${text}`));
+                            }
+                        })
+                        .catch(error => {
+                            // Hide the loading indicator and show an error message
+                            document.getElementById('loading-indicator').style.display = 'none';
+                            alert(`Error: ${error.message}`);
+                        });
+                    });
+                </script>
+
+                <!-- Plus Button to Add New Dropdowns -->
+                <button id="add-dropdown-btn" style="margin-bottom: 20px;">+</button>
+
+                <!-- Container for Dynamically Created Dropdowns -->
+                <div id="dynamic-dropdowns" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+
+                <!-- Lender, Month, Year, Date Range, and Created At Filters -->
+                <div class="filters" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                    <!-- Lender Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="lender-dropdown">Select Lender:</label>
+                        <select id="lender-dropdown" style="width: 100%;">
+                            <option value="">All Lenders</option>
+                            {% for lender in lender_options %}
+                            <option value="{{ lender }}">{{ lender }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Month Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="month-dropdown">Select Month:</label>
+                        <select id="month-dropdown" style="width: 100%;">
+                            <option value="">All Months</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="year-dropdown">Select Year:</label>
+                        <select id="year-dropdown" style="width: 100%;">
+                            <option value="">All Years</option>
+                            <!-- Populate years dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div style="flex: 1;">
+                        <label for="date-range-filter">Select Date Range:</label>
+                        <input type="text" id="date-range-filter" style="width: 100%;" placeholder="Select Date Range">
+                    </div>
+
+                    <!-- Created At Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="created-at-dropdown">Select Created At:</label>
+                        <select id="created-at-dropdown" style="width: 100%;">
+                            <option value="">All Dates</option>
+                            {% for created_at in created_at_options %}
+                            <option value="{{ created_at }}">{{ created_at }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Modal Popup for Table View -->
+                <div id="table-view-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <button id="modal-send-email-button" class="download-button">Send Email</button>
+                        <h3>Lender-wise Monthly Summary</h3>
+
+                        <!-- Add view type dropdown -->
+                        <div style="margin-bottom: 20px;">
+                            <label for="view-type">View Type:</label>
+                            <select id="view-type" style="margin-left: 10px;">
+                                <option value="count">Count</option>
+                                <option value="amount">Amount</option>
+                                <option value="payout">Payout (3%)</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Summary Table Structure -->
+                        <table id="summary-table" class="display" style="width:100%; margin-top: 20px;">
+                            <thead>
+                                <tr id="summary-header">
+                                    <th class="sortable" data-sort="month">Month ↕</th>
+                                    <!-- Lender columns will be added dynamically -->
+                                    <th class="sortable" data-sort="total">Total ↕</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-tbody">
+                                <!-- Rows will be inserted dynamically -->
+                            </tbody>
+                            <tfoot>
+                                <tr id="summary-footer">
+                                    <td>Total</td>
+                                    <!-- Total cells will be added dynamically -->
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <script>
+                            document.getElementById('modal-send-email-button').addEventListener('click', function () {
+                                // Show loading indicator
+                                document.getElementById('loading-indicator').style.display = 'block';
+
+                                fetch('/dashboard', {
+                                    method: 'POST',
+                                })
+                                .then(response => {
+                                    // Hide loading indicator
+                                    document.getElementById('loading-indicator').style.display = 'none';
+
+                                    if (response.ok) {
+                                        // Show success message
+                                        document.getElementById('success-message').style.display = 'block';
+                                        
+                                        // Hide success message after 3 seconds
+                                        setTimeout(function() {
+                                            document.getElementById('success-message').style.display = 'none';
+                                        }, 3000);
+                                    } else {
+                                        response.text().then(text => alert(`Error sending email: ${text}`));
+                                    }
+                                })
+                                .catch(error => {
+                                    // Hide loading indicator and show error
+                                    document.getElementById('loading-indicator').style.display = 'none';
+                                    alert(`Error: ${error.message}`);
+                                });
+                            });
+                        </script>
+
+                        <!-- Update the visualization section in the modal -->
+                        <div class="visualization-section" style="margin-top: 30px;">
+                            <h3>Data Visualization</h3>
+                            
+                            <!-- Enhanced controls for visualization -->
+                            <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                                <div class="chart-control-group">
+                                    <label for="chart-type">Chart Type:</label>
+                                    <select id="chart-type" class="chart-control">
+                                        <option value="bar">Bar Chart</option>
+                                        <option value="line">Line Chart</option>
+                                        <option value="pie">Pie Chart</option>
+                                        <option value="doughnut">Doughnut Chart</option>
+                                        <option value="radar">Radar Chart</option>
+                                        <option value="polarArea">Polar Area</option>
+                                    </select>
+                                </div>
+
+                                <div class="chart-control-group">
+                                    <label for="chart-data">Data View:</label>
+                                    <select id="chart-data" class="chart-control">
+                                        <option value="monthly">Monthly Trend</option>
+                                        <option value="lender">Lender Distribution</option>
+                                        <option value="status">Status Distribution</option>
+                                        <option value="amount">Amount Distribution</option>
+                                        <option value="partner">Partner Distribution</option>
+                                    </select>
+                                </div>
+
+                                <div class="chart-control-group">
+                                    <label for="time-period">Time Period:</label>
+                                    <select id="time-period" class="chart-control">
+                                        <option value="all">All Time</option>
+                                        <option value="year">Last Year</option>
+                                        <option value="6months">Last 6 Months</option>
+                                        <option value="quarter">Last Quarter</option>
+                                        <option value="month">Last Month</option>
+                                    </select>
+                                </div>
+
+                                <div class="chart-control-group">
+                                    <label for="value-type">Value Type:</label>
+                                    <select id="value-type" class="chart-control">
+                                        <option value="count">Count</option>
+                                        <option value="amount">Amount</option>
+                                        <option value="average">Average</option>
+                                        <option value="payout">Payout (3%)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Chart containers with loading indicators -->
+                            <div class="charts-container">
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 id="main-chart-title">Primary Analysis</h4>
+                                        <button class="download-chart-btn" data-chart="main">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                    <div class="loading-spinner main-chart-loader" style="display: none;">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                    </div>
+                                    <canvas id="mainChart"></canvas>
+                                </div>
+
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 id="trend-chart-title">Trend Analysis</h4>
+                                        <button class="download-chart-btn" data-chart="trend">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                    <div class="loading-spinner trend-chart-loader" style="display: none;">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                    </div>
+                                    <canvas id="trendChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            
+
+                <!-- jQuery, DataTables, and Date Range Picker JavaScript -->
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+
+                <!-- Table with highlighted header -->
+                <div class="data-table">
+                    <table id="data-table" class="display">
+                        <thead>
+                            <tr>
+                                <th style="background-color: #4CAF50;">Phone</th>
+                                <th style="background-color: #4CAF50;">Disbursed Amount</th>
+                                <th style="background-color: #4CAF50;">Disbursal Date</th>
+                                <th style="background-color: #4CAF50;">Status</th>
+                                <th style="background-color: #4CAF50;">Lender</th>
+                                <th style="background-color: #4CAF50;">Created At</th>
+                                <th style="background-color: #4CAF50;">Partner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table_data %}
+                            <tr>
+                                <td>{{ row.phone }}</td>
+                                <td>{{ row.disbursedamount }}</td>
+                                <td>{{ row.disbursaldate }}</td>
+                                <td>{{ row.status }}</td>
+                                <td>{{ row.Lender }}</td>
+                                <td>{{ row.createdAt }}</td>
+                                <td>{{ row.partner }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Total:</td>
+                                <td id="total-disbursed">{{ total_disbursed }}</td>
+                                <td colspan="5" id="total-count">{{ total_count }} records</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Add these buttons right after your table-view-btn -->
+                <button id="check-duplicates-btn">Check Duplicates</button>
+                <button id="duplicate-btn">View Duplicates</button>
+
+                <!-- Add this modal -->
+                <div id="duplicateModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Duplicate Phone Numbers</h2>
+                            <span class="close" id="closeDuplicateModal">&times;</span>
+                            <button id="download-duplicates-btn">
+                                <i class="fas fa-download"></i> Download CSV
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table id="duplicate-table" class="display">
+                                <thead>
+                                    <tr>
+                                        <th>Phone Number</th>
+                                        <th>Count</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                $(document).ready(function() {
+                    // Initialize duplicate table
+                    const duplicateTable = $('#duplicate-table').DataTable({
+                        pageLength: 25,  // Show more entries per page
+                        order: [[1, 'desc']],  // Sort by count by default
+                        dom: 'Bfrtip',  // Add export buttons
+                        buttons: [
+                            'copy', 'csv', 'excel'
+                        ]
+                    });
+
+                    // Function to show duplicates modal with all duplicate entries
+                    function showDuplicatesModal() {
+                        duplicateTable.clear();
+                        const phoneDetails = {};
+                        
+                        // First pass: collect all phone numbers and their occurrences
+                        $('#data-table').DataTable().rows().every(function() {
+                            const data = this.data();
+                            const phone = data[0];    // Phone
+                            const amount = data[1];   // Disbursed Amount
+                            const date = data[2];     // Disbursal Date
+                            const status = data[3];   // Status
+                            const lender = data[4];   // Lender
+                            const createdAt = data[5]; // Created At
+                            const partner = data[6];   // Partner
+                            
+                            if (!phoneDetails[phone]) {
+                                phoneDetails[phone] = {
+                                    count: 1,
+                                    entries: [{
+                                        amount: amount,
+                                        date: date,
+                                        status: status,
+                                        lender: lender,
+                                        createdAt: createdAt,
+                                        partner: partner
+                                    }]
+                                };
+                            } else {
+                                phoneDetails[phone].count++;
+                                phoneDetails[phone].entries.push({
+                                    amount: amount,
+                                    date: date,
+                                    status: status,
+                                    lender: lender,
+                                    createdAt: createdAt,
+                                    partner: partner
+                                });
+                            }
+                        });
+
+                        // Add all entries with duplicates to the table
+                        Object.entries(phoneDetails).forEach(([phone, details]) => {
+                            if (details.count > 1) {  // Only show phones with multiple entries
+                                // Sort entries by date
+                                details.entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+                                
+                                const detailsHtml = details.entries.map((entry, index) => 
+                                    `<div style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                                        <strong>Entry ${index + 1}:</strong><br>
+                                        <strong>Lender:</strong> ${entry.lender}<br>
+                                        <strong>Date:</strong> ${entry.date}<br>
+                                        <strong>Amount:</strong> ₹${parseFloat(entry.amount).toLocaleString('en-IN')}<br>
+                                        <strong>Status:</strong> ${entry.status}<br>
+                                        <strong>Created At:</strong> ${entry.createdAt}<br>
+                                        <strong>Partner:</strong> ${entry.partner}
+                                    </div>`
+                                ).join('');
+
+                                duplicateTable.row.add([
+                                    `<span style="font-weight: bold;">${phone}</span>`,
+                                    `<span style="color: red; font-weight: bold;">${details.count}</span>`,
+                                    detailsHtml
+                                ]);
+                            }
+                        });
+
+                        duplicateTable.draw();
+                        document.getElementById('duplicateModal').style.display = "block";
+
+                        // Add summary information
+                        const totalDuplicates = duplicateTable.rows().count();
+                        const summaryHtml = `
+                            <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                                <strong>Total Duplicate Numbers Found:</strong> ${totalDuplicates}<br>
+                            </div>
+                        `;
+                        
+                        // Insert summary before the table
+                        $('#duplicate-table_wrapper').before(summaryHtml);
+                    }
+
+                    // Update the click handlers
+                    $('#duplicate-btn').on('click', function() {
+                        showDuplicatesModal();
+                    });
+
+                    $('#closeDuplicateModal').on('click', function() {
+                        document.getElementById('duplicateModal').style.display = "none";
+                    });
+
+                    // Close modal when clicking outside
+                    window.onclick = function(event) {
+                        const modal = document.getElementById('duplicateModal');
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                });
+                </script>
+
+                <!-- Add this JavaScript code after your existing duplicate table initialization -->
+                <script>
+                $(document).ready(function() {
+                    $('#download-duplicates-btn').on('click', function() {
+                        try {
+                            // Get table data
+                            let csvData = [];
+                            
+                            // Add headers
+                            csvData.push(['Phone Number', 'Occurrences', 'Lender', 'Date', 'Amount', 'Status', 'Created At', 'Partner']);
+                            
+                            // Get data from table rows
+                            $('#duplicate-table tbody tr').each(function() {
+                                const phone = $(this).find('td:first').text().trim();
+                                const occurrences = $(this).find('td:nth-child(2)').text().trim();
+                                const detailsCell = $(this).find('td:last');
+                                
+                                // Extract each entry's details
+                                detailsCell.find('div').each(function() {
+                                    const entryText = $(this).html();
+                                    
+                                    // Extract individual fields using more precise selectors
+                                    const lender = $(this).find('strong:contains("Lender:") + br').text().trim() ||
+                                                 entryText.match(/Lender:\s*([^<\n]+)/)?.[1]?.trim() || '';
+                                                     
+                                    const date = $(this).find('strong:contains("Date:") + br').text().trim() ||
+                                                entryText.match(/Date:\s*([^<\n]+)/)?.[1]?.trim() || '';
+                                                
+                                    const amount = $(this).find('strong:contains("Amount:") + br').text().trim() ||
+                                                 entryText.match(/Amount:\s*₹?([^<\n]+)/)?.[1]?.trim() || '';
+                                                     
+                                    const status = $(this).find('strong:contains("Status:") + br').text().trim() ||
+                                                 entryText.match(/Status:\s*([^<\n]+)/)?.[1]?.trim() || '';
+                                                     
+                                    const createdAt = $(this).find('strong:contains("Created At:") + br').text().trim() ||
+                                                    entryText.match(/Created At:\s*([^<\n]+)/)?.[1]?.trim() || '';
+                                                    
+                                    const partner = $(this).find('strong:contains("Partner:") + br').text().trim() ||
+                                                  entryText.match(/Partner:\s*([^<\n]+)/)?.[1]?.trim() || '';
+
+                                    // Clean up the amount value (remove ₹ and commas)
+                                    const cleanAmount = amount.replace(/[₹,]/g, '').trim();
+
+                                    // Add row to CSV data
+                                    csvData.push([
+                                        phone,
+                                        occurrences,
+                                        lender,
+                                        date,
+                                        cleanAmount,
+                                        status,
+                                        createdAt,
+                                        partner
+                                    ]);
+                                });
+                            });
+
+                            // Convert to CSV string with proper escaping
+                            let csvContent = csvData.map(row => 
+                                row.map(cell => {
+                                    // Handle null or undefined
+                                    if (cell === null || cell === undefined) {
+                                        return '""';
+                                    }
+                                    // Convert to string and escape quotes
+                                    const cellStr = String(cell);
+                                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                                        return `"${cellStr.replace(/"/g, '""')}"`;
+                                    }
+                                    return cellStr;
+                                }).join(',')
+                            ).join('\n');
+
+                            // Create blob and download
+                            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                            const link = document.createElement('a');
+                            const timestamp = new Date().toISOString().slice(0,10);
+                            
+                            if (navigator.msSaveBlob) { // IE 10+
+                                navigator.msSaveBlob(blob, `duplicate_numbers_${timestamp}.csv`);
+                            } else {
+                                link.href = URL.createObjectURL(blob);
+                                link.download = `duplicate_numbers_${timestamp}.csv`;
+                                link.style.visibility = 'hidden';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(link.href);
+                            }
+                            
+                            console.log('Download completed successfully');
+                        } catch (error) {
+                            console.error('Download error:', error);
+                            alert('Error downloading file. Please check console for details.');
+                        }
+                    });
+                });
+                </script>
+
+                <script>
+                // Initialize chart variables
+                let mainChart = null;
+                let trendChart = null;
+
+                // Update the updateCharts function to handle value type and time period filters
+                function updateCharts() {
+                    // Get filter values
+                    const valueType = $('#value-type').val();
+                    const timePeriod = $('#time-period').val();
+                    
+                    // Get the table data with applied filters
+                    const summaryData = {};
+                    const months = [];
+                    const lenders = new Set();
+                    
+                    // Apply time period filter
+                    const currentDate = new Date();
+                    let startDate = new Date();
+                    
+                    switch(timePeriod) {
+                        case 'month':
+                            startDate.setMonth(currentDate.getMonth() - 1);
+                            break;
+                        case 'quarter':
+                            startDate.setMonth(currentDate.getMonth() - 3);
+                            break;
+                        case '6months':
+                            startDate.setMonth(currentDate.getMonth() - 6);
+                            break;
+                        case 'year':
+                            startDate.setFullYear(currentDate.getFullYear() - 1);
+                            break;
+                        case 'all':
+                        default:
+                            startDate = new Date(0); // Beginning of time
+                    }
+
+                    // Collect data from the summary table with time period filter
+                    $('#summary-tbody tr').each(function() {
+                        const month = $(this).find('td:first').text();
+                        const [monthName, year] = month.split('-');
+                        const rowDate = new Date(year, getMonthNumber(monthName));
+                        
+                        // Skip if row date is before start date
+                        if (rowDate < startDate) return;
+                        
+                        months.push(month);
+                        
+                        const rowData = {};
+                        $(this).find('td').each(function(index) {
+                            if (index > 0 && index < $(this).parent().find('td').length - 1) {
+                                const lenderName = $('#summary-header th').eq(index).text();
+                                lenders.add(lenderName);
+                                
+                                // Get value based on selected value type
+                                let value = parseFloat($(this).text().replace(/[₹,]/g, '')) || 0;
+                                switch(valueType) {
+                                    case 'amount':
+                                        // Value is already the amount
+                                        break;
+                                    case 'count':
+                                        value = value > 0 ? 1 : 0; // Convert to count
+                                        break;
+                                    case 'average':
+                                        // Calculate average if we have count data
+                                        const count = $(this).data('count') || 1;
+                                        value = value / count;
+                                        break;
+                                    case 'payout':
+                                        value = value * 0.03; // Calculate 3% payout
+                                        break;
+                                }
+                                
+                                rowData[lenderName] = value;
+                            }
+                        });
+                        summaryData[month] = rowData;
+                    });
+
+                    // Update charts with filtered data
+                    if (mainChart) mainChart.destroy();
+                    if (trendChart) trendChart.destroy();
+
+                    // Create the main chart
+                    const ctx = document.getElementById('mainChart').getContext('2d');
+                    const chartType = $('#chart-type').val();
+
+                    const datasets = Array.from(lenders).map(lender => ({
+                        label: lender,
+                        data: months.map(month => summaryData[month][lender] || 0),
+                        backgroundColor: getColorForLender(lender),
+                        borderWidth: 1
+                    }));
+
+                    mainChart = new Chart(ctx, {
+                        type: chartType,
+                        data: {
+                            labels: months,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { stacked: true },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: getYAxisLabel(valueType)
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: getChartTitle(valueType, timePeriod)
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+
+                    // Create trend chart
+                    const trendCtx = document.getElementById('trendChart').getContext('2d');
+                    const monthlyTotals = months.map(month => {
+                        return Object.values(summaryData[month]).reduce((sum, val) => sum + (val || 0), 0);
+                    });
+
+                    trendChart = new Chart(trendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: `${valueType.charAt(0).toUpperCase() + valueType.slice(1)} Trend`,
+                                data: monthlyTotals,
+                                borderColor: '#2196F3',
+                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                tension: 0.1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: getYAxisLabel(valueType)
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `${timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1)} Trend Analysis`
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Helper functions
+                function getMonthNumber(monthName) {
+                    const months = {
+                        'January': 0, 'February': 1, 'March': 2, 'April': 3,
+                        'May': 4, 'June': 5, 'July': 6, 'August': 7,
+                        'September': 8, 'October': 9, 'November': 10, 'December': 11
+                    };
+                    return months[monthName];
+                }
+
+                function getYAxisLabel(valueType) {
+                    switch(valueType) {
+                        case 'amount':
+                            return 'Amount (₹)';
+                        case 'count':
+                            return 'Number of Transactions';
+                        case 'average':
+                            return 'Average Amount (₹)';
+                        case 'payout':
+                            return 'Payout Amount (₹)';
+                        default:
+                            return '';
+                    }
+                }
+
+                function getChartTitle(valueType, timePeriod) {
+                    const valueTypeLabel = valueType.charAt(0).toUpperCase() + valueType.slice(1);
+                    const timePeriodLabel = timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1);
+                    return `${valueTypeLabel} Distribution (${timePeriodLabel})`;
+                }
+
+                // Add event listeners for the filters
+                $('#value-type, #time-period').on('change', updateCharts);
+
+                // Helper function to get consistent colors for lenders
+                function getColorForLender(lender) {
+                    const colorMap = {
+                        'MVCancel': '#4CAF50',
+                        'MoneyView': '#2196F3',
+                        'Mpokket': '#FFC107',
+                        // Add more lenders and colors as needed
+                    };
+                    return colorMap[lender] || '#' + Math.floor(Math.random()*16777215).toString(16);
+                }
+
+                // Add event listeners for chart controls
+                $('#chart-type, #chart-data').on('change', updateCharts);
+
+                // Update charts when table view is opened
+                $('#table-view-btn').on('click', function() {
+                    setTimeout(updateCharts, 500);
+                });
+
+                // Initial chart update
+                $(document).ready(function() {
+                    // Add event listener for view type changes
+                    $('#view-type').on('change', updateCharts);
+                });
+                </script>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- jQuery, DataTables, and Date Range Picker JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script>
+        function sendEmail() {
+            // Collect selected data (modify this according to your data selection logic)
+            const selectedData = getSelectedData(); // Implement this function to get selected data
+
+            fetch('/send_email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: selectedData }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+
+</html><h3>Month-Wise Summary</h3>
+<table id="summary-table" class="display" style="width:100%; margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th>Total Disbursal Count</th>
+            <th>Total Disbursed Amount</th>
+        </tr>
+    </thead>
+    <tbody id="summary-tbody">
+        <!-- Rows will be inserted dynamically -->
+    </tbody>
+</table>
+</div>
+</div>
+
+<!-- jQuery, DataTables, and Date Range Picker JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        const table = $('#data-table').DataTable();
+
+        // Populate Year Dropdown dynamically based on available years
+        function populateYearDropdown() {
+            const yearDropdown = $('#year-dropdown');
+            const startYear = 2020;
+            const endYear = new Date().getFullYear();
+
+            for (let year = startYear; year <= endYear; year++) {
+                yearDropdown.append(`<option value="${year}">${year}</option>`);
+            }
+        }
+        populateYearDropdown();
+
+        // Function to apply filters including the month filter
+        function applyFilters() {
+            const selectedLender = $('#lender-dropdown').val();
+            const selectedMonth = $('#month-dropdown').val();
+            const selectedYear = $('#year-dropdown').val();
+            const dateRange = $('#date-range-filter').val();
+            const createdAt = $('#created-at-dropdown').val();
+
+            // Reset filters
+            table.column(4).search(''); // Reset Lender column filter
+            table.column(2).search(''); // Reset disbursal date column filter
+            table.column(5).search(''); // Reset created at column filter
+
+            // Filter by lender
+            if (selectedLender) {
+                table.column(4).search(`^${selectedLender}$`, true, false).draw();
+            }
+
+            // Filter by both month and year if selected
+            if (selectedMonth && selectedYear) {
+                table.column(2).search(`^${selectedYear}-${selectedMonth}`, true, false).draw();
+            } else if (selectedMonth) {
+                table.column(2).search(`-${selectedMonth}-`, true, false).draw();
+            } else if (selectedYear) {
+                table.column(2).search(`^${selectedYear}-`, true, false).draw();
+            }
+
+            // Apply date range filter
+            if (dateRange) {
+                const [start, end] = dateRange.split(' - ');
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    const date = data[2]; // Use column 2 (disbursaldate) for filtering
+                    return date >= start && date <= end;
+                });
+            }
+
+            // Apply created at filter
+            if (createdAt) {
+                table.column(5).search(`^${createdAt}$`, true, false).draw();
+            }
+
+            table.draw();
+            updateTotals();
+        }
+
+        // Event listeners for filters
+        $('#lender-dropdown, #month-dropdown, #year-dropdown, #date-range-filter, #created-at-dropdown').on('change', applyFilters);
+
+        // Initialize Date Range Picker for date range filter
+        $('#date-range-filter').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                format: 'YYYY-MM-DD',
+                cancelLabel: 'Clear'
+            }
+        });
+
+        // Apply date range filter on date selection
+        $('#date-range-filter').on('apply.daterangepicker', function (ev, picker) {
+            const startDate = picker.startDate.format('YYYY-MM-DD');
+            const endDate = picker.endDate.format('YYYY-MM-DD');
+            $(this).val(startDate + ' - ' + endDate);
+            applyFilters();
+        });
+
+        // Clear date range filter on cancel
+        $('#date-range-filter').on('cancel.daterangepicker', function (ev, picker) {
+            $(this).val('');
+            applyFilters();
+        });
+
+        // Update totals based on filtered data
+        function updateTotals() {
+            let totalDisbursed = 0;
+            let totalCount = 0;
+
+            // Iterate over filtered rows to calculate totals
+            table.rows({ filter: 'applied' }).every(function () {
+                const data = this.data();
+                const disbursedAmount = parseFloat(data[1]) || 0;
+                totalDisbursed += disbursedAmount;
+                totalCount++;
+            });
+
+            // Display updated totals in the footer
+            $('#total-disbursed').text(totalDisbursed.toFixed(2));
+            $('#total-count').text(`${totalCount} records`);
+        }
+
+        // Open and close modal functionality
+        const modal = $('#table-view-modal');
+        $('#table-view-btn').on('click', function () {
+            updateSummaryTable();
+            $('#summary-table').DataTable();  // Apply DataTables to summary table
+            modal.show();
+        });
+        $('.close').on('click', function () {
+            modal.hide();
+            $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on close
+        });
+        $(window).on('click', function (event) {
+            if ($(event.target).is(modal)) {
+                modal.hide();
+                $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on outside click
+            }
+        });
+
+        // Update summary table based on filtered data
+        function updateSummaryTable() {
+            const summaryData = {};
+            const lenderSet = new Set();
+            const viewType = $('#view-type').val();
+            
+            // First pass: collect all unique lenders and initialize data structure
+            table.rows({ filter: 'applied' }).every(function() {
+                const rowData = this.data();
+                // Only process rows that have valid dates
+                if (rowData[2]) {  // rowData[2] is disbursaldate
+                    // Parse DD-MM-YYYY format
+                    const [day, month, year] = rowData[2].split('-');
+                    
+                    // Convert month number to month name
+                    const monthNames = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const monthName = monthNames[parseInt(month) - 1];
+                    
+                    const monthYear = `${monthName}-${year}`; // Format: January-2024
+                    const lender = rowData[4];
+                    const amount = parseFloat(rowData[1]) || 0;
+                        
+                    // Only create entry if we have valid data
+                    if (amount > 0 || viewType === 'count') {
+                        lenderSet.add(lender);
+                        
+                        if (!summaryData[monthYear]) {
+                            summaryData[monthYear] = {
+                                lenders: {},
+                                totalCount: 0,
+                                totalAmount: 0
+                            };
+                        }
+                        
+                        if (!summaryData[monthYear].lenders[lender]) {
+                            summaryData[monthYear].lenders[lender] = {
+                                count: 0,
+                                amount: 0
+                            };
+                        }
+                        
+                        summaryData[monthYear].lenders[lender].count++;
+                        summaryData[monthYear].lenders[lender].amount += amount;
+                        summaryData[monthYear].totalCount++;
+                        summaryData[monthYear].totalAmount += amount;
+                    }
+                }
+            });
+
+            // Sort months chronologically
+            const sortedMonths = Object.keys(summaryData).sort((a, b) => {
+                const monthOrder = {
+                    'January': 0, 'February': 1, 'March': 2, 'April': 3,
+                    'May': 4, 'June': 5, 'July': 6, 'August': 7,
+                    'September': 8, 'October': 9, 'November': 10, 'December': 11
+                };
+                
+                const [monthA, yearA] = a.split('-');
+                const [monthB, yearB] = b.split('-');
+                
+                if (yearA !== yearB) {
+                    return parseInt(yearA) - parseInt(yearB);
+                }
+                return monthOrder[monthA] - monthOrder[monthB];
+            });
+
+            const lenders = Array.from(lenderSet).sort();
+
+            // Update table header
+            const headerRow = $('#summary-header');
+            headerRow.empty().append('<th>Month</th>');
+            lenders.forEach(lender => {
+                headerRow.append(`<th>${lender}</th>`);
+            });
+            headerRow.append('<th>Total</th>');
+
+            // Update table body
+            const summaryTbody = $('#summary-tbody');
+            summaryTbody.empty();
+            
+            sortedMonths.forEach(month => {
+                const data = summaryData[month];
+                let row = `<tr><td>${month}</td>`;
+                
+                let rowTotal = 0;
+                lenders.forEach(lender => {
+                    const lenderData = data.lenders[lender] || { count: 0, amount: 0 };
+                    let value = 0;
+                    
+                    switch(viewType) {
+                        case 'count':
+                            value = lenderData.count;
+                            rowTotal += value;
+                            break;
+                        case 'amount':
+                            value = lenderData.amount;
+                            rowTotal += value;
+                            break;
+                        case 'payout':
+                            value = lenderData.amount * 0.03;
+                            rowTotal += value;
+                            break;
+                    }
+                    
+                    // Make all non-zero values clickable with data attributes
+                    row += `<td>${value > 0 ? 
+                        `<a href="#" class="summary-cell-link" 
+                            data-month="${month}" 
+                            data-lender="${lender}" 
+                            data-value="${value}"
+                            data-view-type="${viewType}">${value.toLocaleString('en-IN', {maximumFractionDigits: 2})}</a>` : 
+                        '0'}</td>`;
+                });
+                
+                // Add row total with clickable link
+                row += `<td><a href="#" class="summary-cell-link" 
+                    data-month="${month}" 
+                    data-lender="all" 
+                    data-value="${rowTotal}"
+                    data-view-type="${viewType}">${rowTotal.toLocaleString('en-IN', {maximumFractionDigits: 2})}</a></td></tr>`;
+                summaryTbody.append(row);
+            });
+
+            // Add click handler for summary cells
+            $('.summary-cell-link').off('click').on('click', function(e) {
+                e.preventDefault();
+                const month = $(this).data('month');
+                const lender = $(this).data('lender');
+                const viewType = $(this).data('view-type');
+                
+                // Get filtered data based on the cell clicked
+                const filteredData = [];
+                table.rows({ filter: 'applied' }).every(function() {
+                    const rowData = this.data();
+                    const rowDate = new Date(rowData[2]); // disbursal date
+                    const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
+                    const rowLender = rowData[4];
+                    
+                    // Check if row matches the filter criteria
+                    if ((month === rowMonth || !month) && 
+                        (lender === rowLender || lender === 'all' || !lender)) {
+                        
+                        filteredData.push([
+                            rowData[0],  // Phone
+                            rowData[1],  // Disbursed Amount
+                            rowData[2],  // Disbursal Date
+                            rowData[3],  // Status
+                            rowData[4],  // Lender
+                            rowData[5],  // Created At
+                            rowData[6]   // Partner
+                        ]);
+                    }
+                });
+
+                // Generate filename
+                const timestamp = new Date().toISOString().split('T')[0];
+                let filename = `${lender}_${month}_${viewType}_${timestamp}.csv`;
+                
+                // Download CSV
+                downloadAsCSV(filteredData, filename);
+            });
+
+            // Update footer totals
+            updateFooterTotals(summaryData, lenders, viewType);
+
+            // Add sort handlers to headers
+            $('.sortable').off('click').on('click', function() {
+                const sortBy = $(this).data('sort');
+                const isAsc = $(this).hasClass('sort-asc');
+                
+                // Remove sort indicators from all headers
+                $('.sortable').removeClass('sort-asc sort-desc');
+                
+                // Add sort indicator to clicked header
+                $(this).addClass(isAsc ? 'sort-desc' : 'sort-asc');
+                
+                // Sort the rows
+                const tbody = $('#summary-tbody');
+                const rows = tbody.find('tr').toArray();
+                
+                rows.sort((a, b) => {
+                    let aVal, bVal;
+                    
+                    if (sortBy === 'month') {
+                        const monthOrder = {
+                            'January': 0, 'February': 1, 'March': 2, 'April': 3,
+                            'May': 4, 'June': 5, 'July': 6, 'August': 7,
+                            'September': 8, 'October': 9, 'November': 10, 'December': 11
+                        };
+                        
+                        const [aMonth, aYear] = $(a).find('td:first').text().split('-');
+                        const [bMonth, bYear] = $(b).find('td:first').text().split('-');
+                        
+                        // First compare years
+                        if (aYear !== bYear) {
+                            return isAsc ? 
+                                parseInt(bYear) - parseInt(aYear) : 
+                                parseInt(aYear) - parseInt(bYear);
+                        }
+                        
+                        // If same year, compare months
+                        return isAsc ? 
+                            monthOrder[bMonth] - monthOrder[aMonth] : 
+                            monthOrder[aMonth] - monthOrder[bMonth];
+                    } else {
+                        // For numeric columns (including total)
+                        aVal = parseFloat($(a).find('td:last').text().replace(/[^0-9.-]+/g, '')) || 0;
+                        bVal = parseFloat($(b).find('td:last').text().replace(/[^0-9.-]+/g, '')) || 0;
+                        return isAsc ? bVal - aVal : aVal - bVal;
+                    }
+                });
+                
+                // Reattach sorted rows
+                tbody.empty().append(rows);
+            });
+        }
+
+        function updateFooterTotals(summaryData, lenders, viewType) {
+            const footerRow = $('#summary-footer');
+            footerRow.empty().append('<td>Total</td>');
+            
+            let grandTotal = 0;
+            
+            // Calculate column totals
+            const columnTotals = lenders.map(lender => {
+                let total = 0;
+                Object.values(summaryData).forEach(monthData => {
+                    const lenderData = monthData.lenders[lender] || { count: 0, amount: 0 };
+                    switch(viewType) {
+                        case 'count':
+                            total += lenderData.count;
+                            break;
+                        case 'amount':
+                            total += lenderData.amount;
+                            break;
+                        case 'payout':
+                            total += lenderData.amount * 0.03;
+                            break;
+                    }
+                });
+                grandTotal += total;
+                return total;
+            });
+
+            // Add lender totals with clickable links
+            columnTotals.forEach((total, index) => {
+                footerRow.append(`<td>
+                    <a href="#" class="footer-total-link" 
+                        data-lender="${lenders[index]}" 
+                        data-value="${total}"
+                        data-view-type="${viewType}">
+                        ${total.toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                    </a>
+                </td>`);
+            });
+
+            // Add grand total with clickable link
+            footerRow.append(`<td>
+                <a href="#" class="footer-total-link" 
+                    data-lender="all" 
+                    data-value="${grandTotal}"
+                    data-view-type="${viewType}">
+                    ${grandTotal.toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                </a>
+            </td>`);
+
+            // Add click handler for footer totals
+            $('.footer-total-link').off('click').on('click', function(e) {
+                e.preventDefault();
+                const lender = $(this).data('lender');
+                const viewType = $(this).data('view-type');
+                
+                // Get all data based on the footer total clicked
+                const filteredData = [];
+                table.rows().every(function() {
+                    const rowData = this.data();
+                    const rowLender = rowData[4];
+                    
+                    // Include row if it matches the lender filter (or all lenders)
+                    if (lender === 'all' || rowLender === lender) {
+                        filteredData.push([
+                            rowData[0],  // Phone
+                            rowData[1],  // Disbursed Amount
+                            rowData[2],  // Disbursal Date
+                            rowData[3],  // Status
+                            rowData[4],  // Lender
+                            rowData[5],  // Created At
+                            rowData[6]   // Partner
+                        ]);
+                    }
+                });
+
+                // Generate filename for footer totals
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filePrefix = lender === 'all' ? 'All_Lenders' : lender;
+                const filename = `${filePrefix}_Total_${viewType}_${timestamp}.csv`;
+                
+                // Download CSV
+                downloadAsCSV(filteredData, filename);
+            });
+        }
+
+        // Event handler for download links
+        $(document).on('click', '.download-link', function(e) {
+            e.preventDefault();
+            const month = $(this).data('month');
+            const lender = $(this).data('lender');
+            const viewType = $('#view-type').val();
+            
+            // Collect filtered data
+            const filteredData = [];
+            table.rows({ filter: 'applied' }).every(function() {
+                const rowData = this.data();
+                const rowDate = new Date(rowData[2]); // disbursal date
+                const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
+                const rowLender = rowData[4];
+                const amount = parseFloat(rowData[1]) || 0;
+
+                // Check if row matches the filter criteria
+                if ((month === rowMonth || !month) && 
+                    (lender === rowLender || lender === 'all' || !lender)) {
+                    
+                    let displayValue;
+                    switch(viewType) {
+                        case 'count':
+                            displayValue = 1; // Each row counts as 1
+                            break;
+                        case 'amount':
+                            displayValue = amount;
+                            break;
+                        case 'payout':
+                            displayValue = amount * 0.03;
+                            break;
+                    }
+
+                    filteredData.push({
+                        'Phone Number': rowData[0],
+                        'Disbursed Amount': amount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
+                        'Value': displayValue,
+                        'Disbursal Date': rowData[2],
+                        'Status': rowData[3],
+                        'Lender': rowData[4],
+                        'Created At': rowData[5],
+                        'Partner': rowData[6]
+                    });
+                }
+            });
+
+            // Sort data by date
+            filteredData.sort((a, b) => new Date(a['Disbursal Date']) - new Date(b['Disbursal Date']));
+
+            // Calculate totals
+            const totalAmount = filteredData.reduce((sum, row) => sum + (parseFloat(row['Disbursed Amount'].replace(/,/g, '')) || 0), 0);
+            const totalValue = filteredData.reduce((sum, row) => sum + (parseFloat(row['Value']) || 0), 0);
+
+            // Add summary row
+            filteredData.push({
+                'Phone Number': 'Total',
+                'Disbursed Amount': totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
+                'Value': totalValue.toLocaleString('en-IN', {maximumFractionDigits: 2}),
+                'Disbursal Date': '',
+                'Status': '',
+                'Lender': '',
+                'Created At': '',
+                'Partner': `Total Records: ${filteredData.length - 1}` // -1 to exclude summary row
+            });
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(filteredData);
+
+            // Set column widths
+            ws['!cols'] = [
+                {wch: 15}, // Phone Number
+                {wch: 15}, // Disbursed Amount
+                {wch: 15}, // Value
+                {wch: 12}, // Disbursal Date
+                {wch: 10}, // Status
+                {wch: 12}, // Lender
+                {wch: 12}, // Created At
+                {wch: 15}  // Partner
+            ];
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Filtered Data');
+
+            // Generate filename
+            let filename = '';
+            if (month && lender && lender !== 'all') {
+                filename = `${lender}_${month}`;
+            } else if (month) {
+                filename = `All_Lenders_${month}`;
+            } else if (lender && lender !== 'all') {
+                filename = `${lender}_All_Months`;
+            } else {
+                filename = `All_Data`;
+            }
+
+            // Add view type and timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            filename = `${filename}_${viewType}_${timestamp}.csv`;
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+        });
+
+        // Add event listener for view type change
+        $('#view-type').on('change', function() {
+            updateSummaryTable();
+        });
+
+        // New function to handle CSV download
+        function downloadAsCSV(data, filename) {
+            // Define headers
+            const headers = [
+                'Phone',
+                'Disbursed Amount',
+                'Disbursal Date',
+                'Status',
+                'Lender',
+                'Created At',
+                'Partner'
+            ];
+
+            // Create CSV content
+            let csvContent = headers.join(',') + '\n';
+
+            // Add data rows
+            data.forEach(row => {
+                const formattedRow = row.map(cell => {
+                    if (cell === null || cell === undefined) {
+                        return '';
+                    }
+                    const cellStr = String(cell);
+                    // Escape quotes and wrap fields containing commas or quotes
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                });
+                csvContent += formattedRow.join(',') + '\n';
+            });
+
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initial totals calculation on page load
+        updateTotals();
+
+        // Add click handler for download button
+        $('#download-summary-btn').on('click', function() {
+            const viewType = $('#view-type').val();
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `summary_${viewType}_${timestamp}.xlsx`;
+            
+            // Get table data
+            const data = [];
+            const headers = [];
+            
+            // Get headers
+            $('#summary-header th').each(function() {
+                headers.push($(this).text());
+            });
+            
+            // Get row data
+            $('#summary-tbody tr').each(function() {
+                const rowData = {};
+                $(this).find('td').each(function(index) {
+                    // Get the text content, removing any commas and converting to number if needed
+                    const value = $(this).text().replace(/,/g, '');
+                    rowData[headers[index]] = index === 0 ? value : Number(value) || 0;
+                });
+                data.push(rowData);
+            });
+            
+            // Add totals row
+            const totalsRow = {};
+            $('#summary-footer td').each(function(index) {
+                const value = $(this).text().replace(/,/g, '');
+                totalsRow[headers[index]] = index === 0 ? 'Total' : Number(value) || 0;
+            });
+            data.push(totalsRow);
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(data);
+            
+            // Set column widths
+            const colWidths = headers.map(() => ({wch: 15}));
+            ws['!cols'] = colWidths;
+
+            // Create workbook and append worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Summary Data');
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+        });
+
+        // Update the cell click handler
+        $(document).on('click', '.summary-cell-link, .footer-total-link', function(e) {
+            e.preventDefault();
+            const month = $(this).data('month');
+            const lender = $(this).data('lender');
+            const viewType = $('#view-type').val();
+            
+            // Get filtered data
+            const filteredData = [];
+            table.rows().every(function() {  // Note: using .rows() instead of .rows({ filter: 'applied' })
+                const rowData = this.data();
+                const rowDate = new Date(rowData[2]); // disbursal date
+                const rowMonth = `${rowDate.toLocaleString('default', { month: 'long' })}-${rowDate.getFullYear()}`;
+                const rowLender = rowData[4];
+                const amount = parseFloat(rowData[1]) || 0;
+                
+                // Check if row matches the filter criteria
+                if ((month === rowMonth || !month) && 
+                    (lender === rowLender || lender === 'all' || !lender)) {
+                    
+                    filteredData.push({
+                        'Phone': rowData[0],
+                        'Disbursed Amount': amount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
+                        'Disbursal Date': rowData[2],
+                        'Status': rowData[3],
+                        'Lender': rowData[4],
+                        'Created At': rowData[5],
+                        'Partner': rowData[6]
+                    });
+                }
+            });
+
+            // Sort data by date
+            filteredData.sort((a, b) => new Date(a['Disbursal Date']) - new Date(b['Disbursal Date']));
+
+            // Add summary row
+            const totalAmount = filteredData.reduce((sum, row) => 
+                sum + (parseFloat(row['Disbursed Amount'].replace(/,/g, '')) || 0), 0);
+
+            filteredData.push({
+                'Phone': 'Total',
+                'Disbursed Amount': totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2}),
+                'Disbursal Date': '',
+                'Status': '',
+                'Lender': '',
+                'Created At': '',
+                'Partner': `Total Records: ${filteredData.length - 1}`
+            });
+
+            // Generate filename
+            const timestamp = new Date().toISOString().split('T')[0];
+            let filename = '';
+            if (month && lender && lender !== 'all') {
+                filename = `${lender}_${month}`;
+            } else if (month) {
+                filename = `All_Lenders_${month}`;
+            } else if (lender && lender !== 'all') {
+                filename = `${lender}_All_Months`;
+            } else {
+                filename = `All_Data`;
+            }
+            filename = `${filename}_${viewType}_${timestamp}.xlsx`;
+
+            // Create and download Excel file
+            const ws = XLSX.utils.json_to_sheet(filteredData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Filtered Data');
+            XLSX.writeFile(wb, filename);
+        });
+
+        // Remove or comment out any other download-related event handlers
+        // Remove the old downloadAsCSV and downloadExcelFile functions if they're not used elsewhere
+    });
+
+
+
+    // ye neeche wala add kiya hai
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const dynamicDropdownsContainer = document.getElementById('dynamic-dropdowns');
+        const addDropdownBtn = document.getElementById('add-dropdown-btn');
+
+        // Define possible header options
+        const headerOptions = {
+            "Lender": ["All Lenders", "Cashe", "Ramfin", "Fibe", "SmartCoin", "MV", "Mpokket", "MoneyView", "MVCancel"],
+            "Month": ["All Months", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            "Year": ["All Years", "2020", "2021", "2022", "24", "2024"],  // Adjust years dynamically if needed
+            "Status": ["All Statuses", "Approved", "Pending", "Rejected"],  // Example status options
+            // Add other header options as needed
+        };
+
+        // Function to add a new dropdown
+        function addNewDropdown() {
+            // Create a container for each dropdown with label and delete button
+            const dropdownContainer = document.createElement('div');
+            dropdownContainer.style.display = 'flex';
+            dropdownContainer.style.alignItems = 'center';
+            dropdownContainer.style.marginBottom = '10px';
+
+            // Create label for dropdown
+            const dropdownLabel = document.createElement('label');
+            dropdownLabel.textContent = 'Select Filter: ';
+            dropdownLabel.style.marginRight = '10px';
+            dropdownContainer.appendChild(dropdownLabel);
+
+            // Create the dropdown itself
+            const newDropdown = document.createElement('select');
+            newDropdown.style.marginRight = '10px';
+
+            // Populate dropdown with header options
+            Object.keys(headerOptions).forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                newDropdown.appendChild(option);
+            });
+
+            // Append the dropdown to the container
+            dropdownContainer.appendChild(newDropdown);
+
+            // Create a secondary dropdown to hold the values of the selected header
+            const valueDropdown = document.createElement('select');
+            valueDropdown.style.marginRight = '10px';
+            dropdownContainer.appendChild(valueDropdown);
+
+            // Event listener to update value dropdown when a header is selected
+            newDropdown.addEventListener('change', function () {
+                const selectedHeader = newDropdown.value;
+                const values = headerOptions[selectedHeader];
+
+                // Clear any existing options
+                valueDropdown.innerHTML = '';
+
+                // Add the values based on selected header
+                values.forEach(value => {
+                    const valueOption = document.createElement('option');
+                    valueOption.value = value;
+                    valueOption.textContent = value;
+                    valueDropdown.appendChild(valueOption);
+                });
+            });
+
+            // Delete button to remove this dropdown
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'x';
+            deleteButton.style.marginLeft = '10px';
+            deleteButton.addEventListener('click', function () {
+                dropdownContainer.remove();
+            });
+            dropdownContainer.appendChild(deleteButton);
+
+            // Add the dropdown container to the main dynamic dropdowns container
+            dynamicDropdownsContainer.appendChild(dropdownContainer);
+        }
+
+        // Add initial dropdown on page load
+        addDropdownBtn.addEventListener('click', addNewDropdown);
+    });
+
+
+
+
+
+    // Show the modal
+    function showModal() {
+        document.getElementById("emailModal").style.display = "block";
+    }
+
+    // Close the modal
+    function closeModal() {
+        document.getElementById("emailModal").style.display = "none";
+    }
+
+    // Close the modal if clicked outside
+    window.onclick = function (event) {
+        const modal = document.getElementById("emailModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Function to highlight duplicate phone numbers
+    function checkDuplicates() {
+        const table = $('#data-table').DataTable();
+        const phoneMap = new Map();
+        
+        // Reset previous highlighting
+        table.rows().every(function() {
+            $(this.node()).find('td:first').css({
+                'background-color': '',
+                'color': '',
+                'font-weight': ''
+            });
+        });
+
+        // First pass: collect phone numbers from first column
+        table.rows().every(function() {
+            const phone = this.data()[0]?.toString().trim(); // Get first column (Phone)
+            
+            if (phone) {
+                if (phoneMap.has(phone)) {
+                    phoneMap.set(phone, phoneMap.get(phone) + 1);
+                } else {
+                    phoneMap.set(phone, 1);
+                }
+            }
+        });
+
+        // Second pass: highlight duplicates
+        let duplicateCount = 0;
+        table.rows().every(function() {
+            const phone = this.data()[0]?.toString().trim();
+            
+            if (phone && phoneMap.get(phone) > 1) {
+                // Find and highlight the phone cell (first column)
+                const row = $(this.node());
+                const phoneCell = row.find('td:first');
+                
+                // Apply highlighting
+                phoneCell.css({
+                    'background-color': '#ffe6e6',
+                    'color': 'red',
+                    'font-weight': 'bold'
+                });
+            }
+        });
+
+        // Count unique duplicate numbers
+        duplicateCount = Array.from(phoneMap.entries())
+            .filter(([_, count]) => count > 1).length;
+
+        // Update duplicate count
+        $('#duplicate-count').text(duplicateCount);
+        
+        // Show alert with duplicate numbers found
+        if (duplicateCount > 0) {
+            const duplicateNumbers = Array.from(phoneMap.entries())
+                .filter(([_, count]) => count > 1)
+                .map(([phone, count]) => `${phone} (${count} times)`)
+                .join('\n');
+            
+            alert(`Found ${duplicateCount} duplicate numbers:\n${duplicateNumbers}`);
+        } else {
+            alert('No duplicate numbers found.');
+        }
+    }
+
+    // Add event listener
+    $(document).ready(function() {
+        $('#check-duplicates').on('click', checkDuplicates);
+    });
+
+
+// Function to update partner information
+async function updatePartnerInfo() {
+    const table = $('#data-table').DataTable();
+    const loadingDiv = $('<div>Updating partner information...</div>')
+        .css({
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '20px',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            borderRadius: '5px',
+            zIndex: 9999
+        });
+    
+    $('body').append(loadingDiv);
+
+    try {
+        // Collect all phone numbers
+        const allPhones = [];
+        table.rows().every(function() {
+            const phone = this.data()[0];
+            if (phone) allPhones.push(phone.toString().trim());
+        });
+
+        if (allPhones.length === 0) {
+            throw new Error('No phone numbers found in table');
+        }
+
+        // Process in larger batches - changed from 50 to 5000
+        const batchSize = 5000;
+        const batches = [];
+        for (let i = 0; i < allPhones.length; i += batchSize) {
+            batches.push(allPhones.slice(i, i + batchSize));
+        }
+
+        let partnerData = {};
+        let successfulBatches = 0;
+
+        for (const [index, batch] of batches.entries()) {
+            try {
+                const batchData = await getPartnerInfo(batch);
+                partnerData = { ...partnerData, ...batchData };
+                successfulBatches++;
+                
+                // Update loading message
+                loadingDiv.text(`Processing batch ${index + 1}/${batches.length}...`);
+            } catch (error) {
+                console.error(`Error processing batch ${index + 1}:`, error);
+                continue; // Continue with next batch
+            }
+        }
+
+        // Update table with available data
+        let updatedCount = 0;
+        table.rows().every(function() {
+            const phone = this.data()[0].toString().trim();
+            if (partnerData[phone]) {
+                const partner = partnerData[phone].partner;
+                // Find the last cell (Partner column) and update its text
+                const row = $(this.node());
+                const partnerCell = row.find('td:last');
+                partnerCell.text(partner);
+                updatedCount++;
+            }
+        });
+
+        table.draw(false);
+
+        // Show summary message
+        alert(`Partner information update complete:
+- Total records: ${allPhones.length}
+- Successfully updated: ${updatedCount}
+- Successful batches: ${successfulBatches}/${batches.length}`);
+
+    } catch (error) {
+        console.error('Update failed:', error);
+        alert(`Failed to update partner information: ${error.message}`);
+    } finally {
+        loadingDiv.remove();
+    }
+}
+
+// Helper function to get partner information from API
+async function getPartnerInfo(phones) {
+    try {
+        const API_ENDPOINT = '/api/internal/get-partners';
+        
+        console.log('Requesting partner info for phones:', phones);
+        
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ phones }),
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Transform the response data to match the expected format
+        const transformedData = {};
+        for (const item of data) {
+            if (item.phone && item.partner) {
+                transformedData[item.phone] = { partner: item.partner };
+            }
+        }
+        
+        console.log('Partner data received:', transformedData);
+        return transformedData;
+
+    } catch (error) {
+        console.error('Partner API Error:', error);
+        return phones.reduce((acc, phone) => {
+            acc[phone] = { partner: 'Unknown' };
+            return acc;
+        }, {});
+    }
+}
+
+// Add update button when document is ready
+$(document).ready(function() {
+    const updateButton = $('<button>')
+        .text('Update Partner Info')
+        .addClass('btn btn-primary')  // Add Bootstrap classes if you're using Bootstrap
+        .css({
+            margin: '10px',
+            padding: '8px 15px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+        })
+        .on('click', updatePartnerInfo);
+    
+    // Add the button in a more visible location
+    $('#data-table_wrapper').prepend(updateButton);
+});
+
+</script>
+</body> 
+</html>
+
+
+
+
+
+App.py
+
+
+# from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify ,send_file
+# import pandas as pd
+# from pymongo import MongoClient
+# import os
+# from datetime import datetime
+# from markupsafe import Markup   
+# from flask import jsonify
+# import openpyxl
+# from openpyxl.styles import Font
+# import io
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify ,send_file
+import smtplib
+import pandas as pd
+from pymongo import MongoClient
+import os
+from datetime import datetime, timedelta
+from markupsafe import Markup   
+from flask import jsonify
+import openpyxl
+from openpyxl.styles import Font
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from openpyxl import Workbook
+from flask import Flask, render_template, request, session
+import matplotlib.pyplot as plt
+import io
+import base64
+import requests
+
+
+
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
+
+# Existing MongoDB connection string
+client = MongoClient("mongodb+srv://ceo:RuxSmFVLnV7Za7Om@cluster1.zdfza.mongodb.net/")
+db = client['test']
+users_collection = db['users']
+mis_collection = db['mis']
+
+# New MongoDB connection string for "All Fields" button
+all_fields_client = MongoClient("mongodb+srv://ceo: @cluster0.2vjepfe.mongodb.net/")
+all_fields_db = all_fields_client['test']
+all_fields_collection = all_fields_db['users']
+    
+def format_date(date_str):
+    """Attempts to parse a date string and return it in 'dd-mm-yyyy' format, ignoring time if present."""
+    formats = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%m/%d/%Y', '%d-%m-%Y', '%d/%m/%Y', '%Y/%m/%d']
+    for fmt in formats:
+        try:
+            date_obj = datetime.strptime(date_str, fmt)
+            return date_obj.strftime('%d-%m-%Y')
+        except ValueError:
+            continue
+    return None  # Return None if the date string does not match any known format
+
+@app.route('/settings')
+def settings():
+    if 'username' in session and session['access_level'] == 'full':
+        return render_template('settings.html', username=session['username'])
+    else:
+        return "Unauthorized Access", 403
+
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    current_password = request.form['current_password']
+    new_password = request.form['new_password']
+    confirm_password = request.form['confirm_password']
+
+    if new_password != confirm_password:
+        flash("New password and confirm password do not match.")
+        return redirect(url_for('settings'))
+
+    user = users_collection.find_one({"username": "Admin"})
+    if user and user['password'] == current_password:
+        users_collection.update_one({"username": "Admin"}, {"$set": {"password": new_password, "updatedAt": datetime.now()}})
+        flash("Password updated successfully.")
+    else:
+        flash("Current password is incorrect.")
+
+    return redirect(url_for('settings'))
+
+@app.route('/create_user', methods=['POST'])
+def create_user():
+    username = request.form['username']
+    email = request.form['email']
+    password = request.form['password']
+    role = request.form['role']
+    rights = request.form.getlist('rights')
+
+    new_user = {
+        "username": username,
+        "email": email,
+        "password": password,
+        "role": role,
+        "rights": rights,
+        "createdAt": datetime.now(),
+        "updatedAt": datetime.now()
+    }
+
+    users_collection.insert_one(new_user)
+    flash(f"User {username} created successfully with role {role}.")
+
+    return redirect(url_for('settings'))
+
+from markupsafe import Markup   
+
+@app.route('/data_upload', methods=['GET', 'POST'])
+def data_upload():
+    if 'username' in session:
+        if request.method == 'POST':
+            files = request.files.getlist('file')
+            collection_type = request.form.get('collection_type')
+            lender_name = request.form.get('lender')
+
+            if not files or files[0].filename == '':
+                flash('No selected files')
+                return redirect(request.url)
+
+            for file in files:
+                if file and (file.filename.endswith('.csv') or file.filename.endswith('.xlsx')):
+                    try:
+                        # Read the file
+                        if file.filename.endswith('.csv'):
+                            data = pd.read_csv(file)
+                        else:
+                            data = pd.read_excel(file)
+
+                        data = data.astype(str)
+
+                        # Apply lender-specific column selection, renaming, and filter condition
+                        if lender_name == "Cashe":
+                            data = data[['mobile_no', 'loan_transferred_date', 'loan_amount']]
+                            data = data.rename(columns={
+                                'mobile_no': 'phone',
+                                'loan_transferred_date': 'disbursaldate',
+                                'loan_amount': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "Ramfin":
+                            data = data[['mobile', 'disbursalDate', 'disbursalAmount']]
+                            data = data.rename(columns={
+                                'mobile': 'phone',
+                                'disbursalDate': 'disbursaldate',
+                                'disbursalAmount': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "Fibe":
+                            data = data[['mobile_number', 'first_disb_loan_date', 'first_disb_loan_amt']]
+                            data = data.rename(columns={
+                                'mobile_number': 'phone',
+                                'first_disb_loan_date': 'disbursaldate',
+                                'first_disb_loan_amt': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "SmartCoin":
+                            data = data[['phone_number', 'loan_disbursed_date', 'loan_amount']]
+                            data = data.rename(columns={
+                                'phone_number': 'phone',
+                                'loan_disbursed_date': 'disbursaldate',
+                                'loan_amount': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "MV":
+                            data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
+                            data = data.rename(columns={
+                                'phone_number': 'phone',
+                                'disbursal_date': 'disbursaldate',
+                                'disbursed_amt': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "Mpokket":
+                            data = data[['mobile_number', 'loan_disbursed_timestamp_ist', 'Loan_amount', 'profession']]
+                            data = data.rename(columns={
+                                'mobile_number': 'phone',
+                                'loan_disbursed_timestamp_ist': 'disbursaldate',
+                                'Loan_amount': 'disbursedamount',
+                                'profession': 'emp'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+
+                        elif lender_name == "MoneyView":
+                            data = data[(data['current_status'] == "11. Disbursed")][
+                                ['phone_number', 'disbursed_amt', 'disbursal_date', 'current_status', 'employment_type']
+                            ]
+                            data = data.rename(columns={
+                                'phone_number': 'phone',
+                                'disbursed_amt': 'disbursedamount', 
+                                'disbursal_date': 'disbursaldate', 
+                                'current_status': 'status', 
+                                'employment_type': 'emp' 
+                            })
+
+                            data = data[data['disbursedamount'].astype(float) > 1]
+                        elif lender_name == "MVCancel":
+                            data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
+                            data = data.rename(columns={
+                                'phone_number': 'phone',
+                                'disbursal_date': 'disbursaldate',
+                                'disbursed_amt': 'disbursedamount'
+                            })
+                            data = data[data['disbursedamount'].astype(float) > 1]
+
+                        # After the lender-specific data processing and before MongoDB insertion,
+                        # Add this code to format the disbursaldate:
+                        
+                        def format_date(date_str):
+                            """Convert any date string to DD-MM-YYYY format"""
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S',
+                                '%Y-%m-%d',
+                                '%d-%m-%Y',
+                                '%d/%m/%Y',
+                                '%Y/%m/%d',
+                                '%m/%d/%Y'
+                            ]
+                            
+                            for fmt in date_formats:
+                                try:
+                                    return datetime.strptime(str(date_str).strip(), fmt).strftime('%d-%m-%Y')
+                                except ValueError:
+                                    continue
+                            return date_str  # Return original if no format matches
+
+                        # Format the disbursaldate column
+                        data['disbursaldate'] = data['disbursaldate'].apply(format_date)
+
+                        # Add common columns
+                        data['Lender'] = lender_name
+                        data['createdAt'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        
+                        # Convert data to dictionary format for MongoDB insertion
+                        data_dict = data.to_dict(orient='records')
+
+                        # Insert data into MongoDB based on collection type
+                        if collection_type == 'users':
+                            users_collection.insert_many(data_dict)
+
+                            for record in data_dict:
+                            # Convert 'disbursaldate' to 'dd-mm-yyyy' format if it exists
+                             if 'disbursaldate' in record and record['disbursaldate']:
+                                try:
+                                    date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
+                                    record['disbursaldate'] = date_obj.strftime('%d-%m-%Y')
+                                except ValueError:
+                                    flash(f"Invalid date format in disbursaldate for {record['phone']}")
+                                    continue  # Skip this record if date format is invalid
+
+                            # Check if the document already exists
+                            existing_doc = users_collection.find_one({'phone': record['phone']})
+                            if existing_doc:
+                                # Detect changes
+                                fields_to_update = {k: v for k, v in record.items() if existing_doc.get(k) != v}
+
+                                if fields_to_update:
+                                    # Only update 'updatedAt' if there's a change
+                                    fields_to_update['updatedAt'] = datetime.now()
+                                    users_collection.update_one(
+                                        {'phone': record['phone']},
+                                        {'$set': fields_to_update}
+                                    )
+                            else:
+                                # Insert new document with 'updatedAt'
+                                record['updatedAt'] = datetime.now()
+                                users_collection.insert_one(record)
+
+                            flash(f'User data for {lender_name} uploaded successfully for file {file.filename}.')
+                        elif collection_type == 'mis':
+                            mis_collection.insert_many(data_dict)
+                            flash(f'MIS data for {lender_name} uploaded successfully for file {file.filename}.')
+                        else:
+                            flash(f'Invalid collection type selected for file {file.filename}.')
+                    except Exception as e:
+                        flash(f'Error processing file {file.filename}: {e}')
+                        print(f'Error processing file {file.filename}: {e}')
+                else:
+                    flash(f'Only CSV or Excel files are allowed. Skipping file {file.filename}.')
+
+            return redirect(url_for('data_upload'))
+
+        return render_template('data_upload.html', username=session['username'])
+    else:
+        return redirect(url_for('login'))
+ 
+
+@app.route('/')
+def login():
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login_post():
+    username = request.form['username']
+    password = request.form['password']
+    session['username'] = username
+
+    if password == '123123':
+        session['access_level'] = 'limited'
+        return redirect(url_for('home'))
+    elif password == '123456':
+        session['access_level'] = 'full'
+        return redirect(url_for('home'))
+    else:
+        return "Invalid Credentials", 401
+
+@app.route('/home')
+def home():
+    if 'username' in session:
+        return render_template('home.html', username=session['username'], access_level=session['access_level'])
+    else:
+        return redirect(url_for('login'))
+    
+
+
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    if 'username' in session and session['access_level'] == 'full':
+        # Fetch data from the database
+        data = list(mis_collection.find({}, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+
+        # Format disbursaldate and createdAt
+        for record in data:
+            if 'disbursaldate' in record and record['disbursaldate']:
+                try:
+                    date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
+                    record['disbursaldate'] = date_obj.strftime('%d-%m-%y')
+                except ValueError:
+                    pass
+            if 'createdAt' in record and record['createdAt']:
+                try:
+                    date_obj = datetime.strptime(record['createdAt'], '%Y-%m-%d %H:%M:%S')
+                    record['createdAt'] = date_obj.strftime('%d-%m-%y')
+                except ValueError:
+                    pass
+
+        # Filter out records with missing or blank 'disbursedamount'
+        data = [record for record in data if record.get('disbursedamount') not in [None, "", " "]]
+
+        # Calculate total disbursed amount and total count of records
+        total_disbursed = sum(float(record['disbursedamount']) for record in data)
+        total_count = len(data)
+
+        # Extract unique filter options
+        month_options = sorted(set(record['disbursaldate'][3:5] for record in data if 'disbursaldate' in record))
+        lender_options = sorted(set(record['Lender'] for record in data if 'Lender' in record))
+        created_at_options = sorted(set(record['createdAt'] for record in data if 'createdAt' in record))
+
+        # If POST request, send email
+        if request.method == 'POST':
+            try:
+                send_email_with_excel(data)
+                return "Email sent successfully!"
+            except Exception as e:
+                return f"Error sending email: {str(e)}"
+
+        return render_template(
+            'dashboard.html',
+            username=session['username'],
+            table_data=data,
+            total_disbursed=total_disbursed,
+            total_count=total_count,
+            month_options=month_options,
+            lender_options=lender_options,
+            created_at_options=created_at_options,
+        )
+    else:
+        return "Unauthorized Access", 403
+
+
+def send_email_with_excel(data):
+    # Generate Excel file
+    excel_file_path = "dashboard_data.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Dashboard Data"
+
+    # Add headers
+    headers = ['Phone', 'Disbursed Amount', 'Disbursal Date', 'Status', 'Lender', 'Created At']
+    sheet.append(headers)
+
+    # Add data
+    for record in data:
+        sheet.append([
+            record.get('phone', ''),
+            record.get('disbursedamount', ''),
+            record.get('disbursaldate', ''),
+            record.get('status', ''),
+            record.get('Lender', ''),
+            record.get('createdAt', '')
+        ])
+
+    # Save the Excel file
+    workbook.save(excel_file_path)
+
+    # Email setup
+    sender_email = "info@credmantra.com"
+    sender_password = "ptho pmsy xlla ojxp"  # Replace with the actual password
+    recipient_email = "ceo@credmantra.com"
+    subject = "CredMantra CRM Data"
+    body = "Please find attached the latest dashboard report."
+
+    # Compose email
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Attach Excel file
+    with open(excel_file_path, "rb") as attachment:
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(attachment.read())
+        encoders.encode_base64(part)
+        part.add_header(
+            'Content-Disposition',
+            f'attachment; filename={os.path.basename(excel_file_path)}'
+        )
+        msg.attach(part)
+
+    # Send email
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender_email, sender_password)
+    server.sendmail(sender_email, recipient_email, msg.as_string())
+    server.quit()
+
+    # Remove temporary Excel file
+    os.remove(excel_file_path)
+
+# @app.route('/dashboard')
+# def dashboard():    
+#     if 'username' in session and session['access_level'] == 'full':
+#         # Query to fetch all data from the 'mis' collection
+#         data = list(mis_collection.find({}, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+
+#         # Format disbursaldate and createdAt to DD-MM-YY
+#         for record in data:
+#             if 'disbursaldate' in record and record['disbursaldate']:
+#                 try:
+#                     date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
+#                     record['disbursaldate'] = date_obj.strftime('%d-%m-%y')
+#                 except ValueError:
+#                     pass  # Skip formatting if date is not in expected format
+#             if 'createdAt' in record and record['createdAt']:
+#                 try:
+#                     date_obj = datetime.strptime(record['createdAt'], '%Y-%m-%d %H:%M:%S')
+#                     record['createdAt'] = date_obj.strftime('%d-%m-%y')
+#                 except ValueError:
+#                     pass  # Skip formatting if date is not in expected format
+
+#             # # Fetch partner information from all_fields_collection based on phone number
+#             # partner_info = all_fields_collection.find_one({'phone': record['phone']}, {'_id': 0, 'partner': 1})
+#             # record['partner'] = partner_info['partner'] if partner_info else 'N/A'
+
+#         # Filter out records with missing or blank 'disbursedamount'
+#         data = [record for record in data if record.get('disbursedamount') not in [None, "", " "]]
+
+#         # Calculate total disbursed amount and total count of records
+#         total_disbursed = sum(float(record['disbursedamount']) for record in data)
+#         total_count = len(data)
+
+#         # Extract unique months, lenders, and createdAt dates for filter dropdowns
+#         month_options = sorted(set(record['disbursaldate'][3:5] for record in data if 'disbursaldate' in record))  # Extract MM
+#         lender_options = sorted(set(record['Lender'] for record in data if 'Lender' in record))
+#         created_at_options = sorted(set(record['createdAt'] for record in data if 'createdAt' in record))
+#         partner_options = sorted(set(record['partner'] for record in data if 'partner' in record))
+
+#         return render_template(
+#             'dashboard.html',
+#             username=session['username'],
+#             table_data=data,
+#             total_disbursed=total_disbursed,
+#             total_count=total_count,
+#             month_options=month_options,
+#             lender_options=lender_options,
+#             created_at_options=created_at_options,
+#             partner_options=partner_options  # Pass partner options to template
+#         )
+#     else:
+#         return "Unauthorized Access", 403
+    
+
+
+# @app.route('/dashboard')
+# def dashboard():    
+#     if 'username' in session and session['access_level'] == 'full':
+#         # Query to fetch all data from the 'mis' collection
+#         data = list(mis_collection.find({}, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+
+#         # Format disbursaldate and createdAt to DD-MM-YY
+#         for record in data:
+#             if 'disbursaldate' in record and record['disbursaldate']:
+#                 try:
+#                     date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
+#                     record['disbursaldate'] = date_obj.strftime('%d-%m-%y')
+#                 except ValueError:
+#                     pass  # Skip formatting if date is not in expected format
+#             if 'createdAt' in record and record['createdAt']:
+#                 try:
+#                     date_obj = datetime.strptime(record['createdAt'], '%Y-%m-%d %H:%M:%S')
+#                     record['createdAt'] = date_obj.strftime('%d-%m-%y')
+#                 except ValueError:
+#                     pass  # Skip formatting if date is not in expected format
+
+#             # # Fetch partner information from all_fields_collection based on phone number
+#             # partner_info = all_fields_collection.find_one({'phone': record['phone']}, {'_id': 0, 'partner': 1})
+#             # record['partner'] = partner_info['partner'] if partner_info else 'N/A'
+
+#         # Filter out records with missing or blank 'disbursedamount'
+#         data = [record for record in data if record.get('disbursedamount') not in [None, "", " "]]
+
+#         # Calculate total disbursed amount and total count of records
+#         total_disbursed = sum(float(record['disbursedamount']) for record in data)
+#         total_count = len(data)
+
+#         # Extract unique months, lenders, and createdAt dates for filter dropdowns
+#         month_options = sorted(set(record['disbursaldate'][3:5] for record in data if 'disbursaldate' in record))  # Extract MM
+#         lender_options = sorted(set(record['Lender'] for record in data if 'Lender' in record))
+#         created_at_options = sorted(set(record['createdAt'] for record in data if 'createdAt' in record))
+#         partner_options = sorted(set(record['partner'] for record in data if 'partner' in record))
+
+#         return render_template(
+#             'dashboard.html',
+#             username=session['username'],
+#             table_data=data,
+#             total_disbursed=total_disbursed,
+#             total_count=total_count,
+#             month_options=month_options,
+#             lender_options=lender_options,
+#             created_at_options=created_at_options,
+#             partner_options=partner_options  # Pass partner options to template
+#         )
+#     else:
+#         return "Unauthorized Access", 403
+
+
+
+@app.route('/dashboard_copy')
+def dashboard_copy():
+    if 'username' in session and session['access_level'] == 'full':
+        # Query to fetch all data from the 'mis' collection
+        data = list(mis_collection.find({}, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+
+        # Format disbursaldate and createdAt to DD-MM-YY
+        for record in data:
+            if 'disbursaldate' in record and record['disbursaldate']:
+                try:
+                    date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
+                    record['disbursaldate'] = date_obj.strftime('%d-%m-%y')
+                except ValueError:
+                    pass  # Skip formatting if date is not in expected format
+            if 'createdAt' in record and record['createdAt']:
+                try:
+                    date_obj = datetime.strptime(record['createdAt'], '%Y-%m-%d %H:%M:%S')
+                    record['createdAt'] = date_obj.strftime('%d-%m-%y')
+                except ValueError:
+                    pass  # Skip formatting if date is not in expected format
+
+            # # Fetch partner information from all_fields_collection based on phone number
+            # partner_info = all_fields_collection.find_one({'phone': record['phone']}, {'_id': 0, 'partner': 1})
+            # record['partner'] = partner_info['partner'] if partner_info else 'N/A'
+
+        # Filter out records with missing or blank 'disbursedamount'
+        data = [record for record in data if record.get('disbursedamount') not in [None, "", " "]]
+
+        # Calculate total disbursed amount and total count of records
+        total_disbursed = sum(float(record['disbursedamount']) for record in data)
+        total_count = len(data)
+
+        # Extract unique months, lenders, and createdAt dates for filter dropdowns
+        month_options = sorted(set(record['disbursaldate'][3:5] for record in data if 'disbursaldate' in record))  # Extract MM
+        lender_options = sorted(set(record['Lender'] for record in data if 'Lender' in record))
+        created_at_options = sorted(set(record['createdAt'] for record in data if 'createdAt' in record))
+        partner_options = sorted(set(record['partner'] for record in data if 'partner' in record))
+
+        return render_template(
+            'dashboard_copy.html',
+            username=session['username'],
+            table_data=data,
+            total_disbursed=total_disbursed,
+            total_count=total_count,
+            month_options=month_options,
+            lender_options=lender_options,
+            created_at_options=created_at_options,
+            partner_options=partner_options  # Pass partner options to template
+        )
+    else:
+        return "Unauthorized Access", 403
+
+
+
+
+@app.route('/filtered_data', methods=['POST'])
+def filtered_data():
+    filters = request.get_json()
+    selected_created_at_range = filters.get('createdAtRange', [])
+
+    # MongoDB query for filtering based on createdAt date range
+    query = {}
+
+    if selected_created_at_range:
+        start_date, end_date = selected_created_at_range
+        query['createdAt'] = {
+            '$gte': datetime.strptime(start_date, '%Y-%m-%d'),
+            '$lte': datetime.strptime(end_date, '%Y-%m-%d')
+        }
+
+    # Fetch filtered data from MongoDB based on createdAt range
+    data = list(mis_collection.find(query, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+
+    # Calculate totals based on the filtered data
+    total_disbursed = sum(float(record.get('disbursedamount', 0)) for record in data)
+    total_count = len(data)
+
+    return jsonify({
+        'data': data,
+        'totalDisbursed': total_disbursed,
+        'totalCount': total_count
+    })
+
+
+
+from flask import send_file
+import pandas as pd
+import io
+
+@app.route('/download_filtered_data', methods=['POST'])
+def download_filtered_data():
+    filtered_data = request.get_json().get('data', [])
+    
+    # Convert the data to a DataFrame and format dates
+    df = pd.DataFrame(filtered_data)
+    
+    # Create an Excel file in memory
+    output = io.BytesIO()
+    
+    # Create Excel writer with xlsxwriter engine
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Filtered Data')
+        
+        # Get the xlsxwriter workbook and worksheet objects
+        workbook = writer.book
+        worksheet = writer.sheets['Filtered Data']
+        
+        # Add some formatting
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#D3D3D3',
+            'border': 1
+        })
+        
+        # Write the column headers with the header format
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            
+        # Auto-adjust columns' width
+        for column in df:
+            column_width = max(df[column].astype(str).map(len).max(), len(column))
+            col_idx = df.columns.get_loc(column)
+            worksheet.set_column(col_idx, col_idx, column_width)
+            
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"filtered_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+# Route for the "All Fields" button
+from flask import Flask, render_template, request, session
+from pymongo import MongoClient
+
+
+@app.route('/all_fields', methods=['GET', 'POST'])
+def all_fields():   
+    if 'username' in session and session['access_level'] == 'full':
+        if request.method == 'POST':
+            # Search by phone number
+            phone = request.form.get('phone')
+            query = {'phone': phone} if phone else {}
+        else:
+            # Fetch all data if no search
+            query = {}
+
+        # Fetch data from MongoDB based on query
+        data = list(all_fields_collection.find(query, {'_id': 0}))
+        total_count = len(data)
+        total_disbursed = sum(float(record.get('disbursedamount', 0)) for record in data)
+
+        return render_template(
+            'all_fields.html',
+            username=session['username'],
+            table_data=data,
+            total_disbursed=total_disbursed,
+            total_count=total_count
+        )
+    else:
+        return "Unauthorized Access", 403
+
+    
+
+
+@app.route('/attendance')
+def attendance():
+    if 'username' in session:
+        return render_template('attendance.html', username=session['username'], access_level=session['access_level'])
+    else:
+        return redirect(url_for('login'))
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('access_level', None)
+    return redirect(url_for('login'))
+
+@app.route('/api/ai-query', methods=['POST'])
+def handle_ai_query():
+    data = request.json
+    query = data.get('query').lower()
+    
+    try:
+        # If query is about lender-wise data
+        if any(keyword in query for keyword in ['lender', 'lenders', 'show lenders', 'lender wise']):
+            # Use mis_collection instead of your_data_collection
+            df = pd.DataFrame(list(mis_collection.find({})))
+            
+            # Get lender-wise counts
+            lender_counts = df['Lender'].value_counts()
+            
+            # Create visualization
+            plt.figure(figsize=(10, 6))
+            lender_counts.plot(kind='bar')
+            plt.title('Lender-wise Distribution')
+            plt.xlabel('Lender')
+            plt.ylabel('Count')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            
+            # Convert plot to base64 string
+            img_buf = io.BytesIO()
+            plt.savefig(img_buf, format='png')
+            img_buf.seek(0)
+            img_base64 = base64.b64encode(img_buf.read()).decode('utf-8')
+            plt.close()
+            
+            # Create table data
+            table_data = lender_counts.to_dict()
+            
+            response = {
+                'response': 'Here is the lender-wise distribution of data:',
+                'visualization': {
+                    'type': 'image',
+                    'data': img_base64,
+                    'table': table_data
+                }
+            }
+            
+            return jsonify(response)
+        
+        # Handle other types of queries
+        else:
+            return jsonify({
+                'response': 'I understand you want to know about: ' + query,
+                'visualization': None
+            })
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+@app.route('/log-communication', methods=['POST'])
+def log_communication():
+    data = request.json
+    communication_log = {
+        'phone': data['phone'],
+        'type': data['type'],  # call, email, sms
+        'direction': data['direction'],  # inbound, outbound
+        'notes': data['notes'],
+        'timestamp': datetime.now(),
+        'logged_by': session['username']
+    }
+    
+    db.communication_logs.insert_one(communication_log)
+    return jsonify({'success': True})
+
+@app.route('/api/attendance', methods=['POST'])
+def update_attendance():
+    data = request.json
+    try:
+        attendance_record = {
+            'employee': data['employee'],
+            'date': data['date'],
+            'status': data['status'],
+            'updated_at': datetime.now(),
+            'updated_by': session['username']
+        }
+        
+        # Update or insert attendance record
+        db.attendance.update_one(
+            {
+                'employee': data['employee'],
+                'date': data['date']
+            },
+            {'$set': attendance_record},
+            upsert=True
+        )
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/salary', methods=['POST'])
+def update_salary():
+    data = request.json
+    try:
+        salary_record = {
+            'agent_id': data['agent_id'],
+            'base_salary': float(data['base_salary']),
+            'incentives': float(data['incentives']),
+            'deductions': float(data['deductions']),
+            'month': data['month'],
+            'year': data['year'],
+            'updated_at': datetime.now(),
+            'updated_by': session['username']
+        }
+        db.salaries.update_one(
+            {
+                'agent_id': data['agent_id'],
+                'month': data['month'],
+                'year': data['year']
+            },
+            {'$set': salary_record},
+            upsert=True
+        )
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/agents', methods=['GET'])
+def get_agents():
+    try:
+        agents = list(db.agents.find({}, {'_id': 0}))
+        return jsonify(agents)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/internal/get-partners', methods=['POST'])
+def get_partners():
+    try:
+        # Get phone numbers from request
+        phones = request.json.get('phones', [])
+        if not phones:
+            return jsonify({'error': 'No phone numbers provided'}), 400
+
+        # External API configuration
+        EXTERNAL_API = 'https://credmantra.com/api/v1/crm/getPartners'
+        API_KEY = 'YOUR_API_KEY'  # Store this in environment variables
+        
+        # Make request to external API
+        response = requests.post(
+            EXTERNAL_API,
+            json={'phones': phones},
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {API_KEY}',
+                'Accept': 'application/json'
+            },
+            timeout=30  # Add timeout to prevent hanging
+        )
+        
+        # Raise exception for bad status codes
+        response.raise_for_status()
+        
+        # Return the data from external API
+        return jsonify(response.json())
+
+    except requests.RequestException as e:
+        app.logger.error(f"External API error: {str(e)}")
+        return jsonify({'error': 'Failed to fetch partner data'}), 500
+    except Exception as e:
+        app.logger.error(f"Internal server error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*************************************************
+
+
+
+////

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <style>
+        .main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .cont {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .cont h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            line-height: 1.4;
+        }
+
+        .mainone {
+            width: 350px;
+            padding: 20px;
+            border-top-left-radius: 20px;
+            height: 100%;
+            background-color: #012141;
+        }
+
+        .maintwo {
+            width: 80%;
+            padding: 20px;
+            height: 100%;
+            background-color: white;
+        }
+
+        .gradient-text {
+            text-align: center;
+            background: linear-gradient(to right,
+                    #ff0000,
+                    /* Red */
+                    #ff7f00,
+                    /* Orange */
+                    #ffff00,
+                    /* Yellow */
+                    #00ff00,
+                    /* Green */
+                    #0000ff,
+                    /* Blue */
+                    #4b0082,
+                    /* Indigo */
+                    #8f00ff
+                    /* Violet */
+                );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 54px;
+            animation: rainbow 12s linear infinite;
+            background-size: 400% 100%;
+        }
+
+        @keyframes rainbow {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 300% 0;
+            }
+        }
+
+
+        .vertical-nav {
+            width: 210px;
+            background: #2c3e50;
+            padding: 20px 0;
+            border-radius: 10px;
+        }
+
+        .vertical-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .vertical-nav li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .vertical-nav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .vertical-nav a:hover {
+            background: #34495e;
+            padding-left: 30px;
+        }
+
+        .vertical-nav i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .vertical-nav span {
+            font-size: 16px;
+        }
+
+        /* Active link styling */
+        .vertical-nav a.active {
+            background: #3498db;
+            border-left: 4px solid #2980b9;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .vertical-nav {
+                width: 100%;
+            }
+
+            .vertical-nav span {
+                display: none;
+            }
+
+            .vertical-nav a {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            .vertical-nav i {
+                margin: 0;
+                font-size: 20px;
+            }
+        }
+
+        .flx {
+            display: flex;
+            width: 100%;
+            text-align: center;
+
+
+        }
+
+        .cont {
+            width: 60%;
+        }
+
+        .cont2 {
+            width: 40%;
+            text-align: center;
+
+        }
+
+        .hero-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            margin-top: -200px;
+        }
+
+        .cont {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+            gap: 2rem;
+            margin-top: 240px;
+            text-align: center;
+        }
+
+        .cont img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .cont h1 {
+            margin: 10px;
+            font-size: 2.5rem;
+            line-height: 1.4;
+        }
+
+        .lottie-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .lottie-container dotlottie-player {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        .cont {
+            display: inline;
+        }
+
+        .one {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .two {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .three {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .four {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .focont {
+            display: flex;
+            margin-top: 60px;
+            gap: 20px;
+        }
+
+        /* Common styles for all cards */
+        .one,
+        .two,
+        .three,
+        .four {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            gap: 10px;
+            /* Space between icon and text */
+        }
+
+        /* Icon styles */
+        .one i,
+        .two i,
+        .three i,
+        .four i {
+            font-size: 2rem;
+            /* Adjust icon size */
+            margin-bottom: 10px;
+        }
+
+        /* Text styles */
+        h4 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Individual card hover effects (optional) */
+        .one:hover,
+        .two:hover,
+        .three:hover,
+        .four:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <di class="mainone">
+            <h1 style="color: white;text-align: center;">Hello, {{ username }}</h1>
+
+            <nav class="vertical-nav">
+                <ul>
+                    <li>
+                        <a href="/home">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/attendance">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Attendance</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/data_upload">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload Data</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </di>
+
+        <div class="maintwo">
+            <h1 class="gradient-text">Welcome to CredMantra CRM</h1>
+            <div class="hero-section">
+                <div class="cont">
+                    <h1 style="font-size: 27px;">Avail Instant loan Ranges 2k to 20L with <span style="color: #2980b9;"
+                            class="auto-type">CredMantra</span></h1>
+                    <img src="{{ url_for('static', filename='cm.png') }}" alt="CredMantra Logo">
+                    <div class="focont">
+                        <div class="one">
+                            <i class="fas fa-user-tie"></i>
+                            <h5>Personal Loan</h5>
+                        </div>
+                        <div class="two">
+                            <i class="fas fa-home"></i>
+                            <h5>Home Loan</h5>
+                        </div>
+                        <div class="three">
+                            <i class="fas fa-credit-card"></i>
+                            <h5>Credit Card</h5>
+                        </div>
+                        <div class="four">
+                            <i class="fas fa-briefcase"></i>
+                            <h5>Business Loan</h5>
+                        </div>
+                    </div>
+                    <hr style="margin-top: 20px;">
+                    <p>Credmantra 2024 Copyright All Rights Reserved</p>
+
+                </div>
+                <div class="lottie-container">
+                    <!-- Option 1: Loan Application Animation -->
+                    <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_qdbb21wb.json"
+                        background="transparent" speed="1" style="width: 400px; height: 400px;" loop autoplay>
+                    </lottie-player>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
+    <script>
+        var typed = new Typed('.auto-type', {
+            strings: ['CredMantra'],
+            typeSpeed: 150,
+            backSpeed: 150,
+            loop: true,
+            showCursor: true,
+            cursorChar: '|',
+            autoInsertCss: true,
+        });
+    </script>
+</body>
+
+</html>

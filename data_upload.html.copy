@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function addFileInput() {
+            const fileInputContainer = document.getElementById("file-input-container");
+
+            // Create a new div to group file input and lender selection
+            const fileGroup = document.createElement("div");
+            fileGroup.classList.add("file-group");
+
+            // Create lender select element
+            const lenderLabel = document.createElement("label");
+            lenderLabel.innerText = "Select Lender:";
+            const lenderSelect = document.createElement("select");
+            lenderSelect.name = "lender";
+            lenderSelect.required = true;
+            lenderSelect.innerHTML = `
+                <option value="Cashe">Cashe</option>
+                <option value="MoneyView">MoneyView</option>
+                <option value="Prefer">Prefer</option>
+                <option value="SmartCoin">SmartCoin</option>
+                <option value="MVCancel">MVCancel</option>
+                <option value="Ramfin">Ramfin</option>
+                <option value="Mpokket">Mpokket</option>
+            `;
+
+            // Create file input element
+            const fileLabel = document.createElement("label");
+            fileLabel.innerText = "Upload CSV or Excel file:";
+            const newInput = document.createElement("input");
+            newInput.type = "file";
+            newInput.name = "file";
+            newInput.accept = ".csv, .xlsx";
+            newInput.required = true;
+            newInput.onchange = function() {
+                updateRecordCount(this);
+            };
+
+            // Create record count span
+            const recordCountSpan = document.createElement("span");
+            recordCountSpan.id = "file-record-count";
+            recordCountSpan.style.marginLeft = "20px";
+            recordCountSpan.innerText = "0 records";
+
+            // Create delete button
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.innerText = "Delete";
+            deleteButton.onclick = function() {
+                fileInputContainer.removeChild(fileGroup);
+            };
+
+            // Append lender select, file input, record count span, and delete button to the group div
+            fileGroup.appendChild(lenderLabel);
+            fileGroup.appendChild(lenderSelect);
+            fileGroup.appendChild(fileLabel);
+            fileGroup.appendChild(newInput);
+            fileGroup.appendChild(recordCountSpan);
+            fileGroup.appendChild(deleteButton);
+
+            // Add the group to the container
+            fileInputContainer.appendChild(fileGroup);
+        }
+
+        function updateRecordCount(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const lines = content.split(/\r\n|\n/);
+                    const totalCount = lines.length - 1; // Assuming the first line is the header
+                    input.nextElementSibling.innerText = `${totalCount} records`;
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Data Upload</h2>
+        <p>Welcome, {{ username }}</p>
+
+        <!-- File upload form -->
+        <form action="{{ url_for('data_upload') }}" method="post" enctype="multipart/form-data">
+            <!-- Select Data Type -->
+            <label for="collection_type">Select Data Type:</label>
+            <select name="collection_type" id="collection_type" required>
+                <option value="users">Users</option>
+                <option value="mis">MIS</option>
+            </select>
+
+            <!-- File Upload Field Container (with Add Button) -->
+            <div id="file-input-container">
+                <div class="file-group">
+                    <!-- Lender Select -->
+                    <label for="lender">Select Lender:</label>
+                    <select name="lender" required>
+                        <option value="Cashe">Cashe</option>
+                        <option value="MoneyView">MoneyView</option>
+                        <option value="Prefer">Prefer</option>
+                        <option value="SmartCoin">SmartCoin</option>
+                        <option value="MVCancel">MVCancel</option>
+                        <option value="Ramfin">Ramfin</option>
+                        1<option value="Mpokket">Mpokket</option>   
+                    </select>
+                    <!-- File Upload Field -->
+                    <label for="file">Upload CSV or Excel file:</label>
+                    <input type="file" name="file" accept=".csv, .xlsx" required onchange="updateRecordCount(this)">
+                    <span id="file-record-count" style="margin-left: 20px;">0 records</span>
+                    <!-- Delete Button -->
+                    <button type="button" onclick="this.parentElement.remove()">Delete</button>
+                </div>
+            </div>
+            <button type="button" onclick="addFileInput()">+</button>
+
+            <!-- Upload Button -->
+            <button type="submit" class="upload-button">Upload</button>
+        </form>
+
+        <!-- Flash messages for upload status -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+                #popup {
+            display: none;
+            /* Initially hidden */
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: red;
+            /* Green background */
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .download-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: orange;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #table-view-btn {
+            margin-left: 10px;
+        }
+
+        .popmodel {
+            display: flex;
+            text-align: center;
+        }
+
+        .hone {
+            width: 50%;
+        }
+
+        .htwo {
+            width: 50%;
+        }
+        .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        font-size: 16px;
+        display: none;
+        z-index: 9999;
+    }
+
+    /* Loading indicator styling */
+    .loading-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border-radius: 5px;
+        display: none;
+        z-index: 10000;
+    }
+
+    .download-link {
+        color: #007bff;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .download-link:hover {
+        color: #0056b3;
+    }
+
+    #check-duplicates-btn, #duplicate-btn {
+        padding: 8px 15px;
+        margin: 0 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #check-duplicates-btn {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    #duplicate-btn {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    #duplicateModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 1200px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #duplicate-table {
+        width: 100%;
+    }
+
+    #duplicate-table td {
+        vertical-align: top;
+        padding: 8px;
+    }
+
+    #duplicate-table .details-cell {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    #duplicateModal .modal-content {
+        background-color: #fefefe;
+        margin: 2% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 95%;
+        max-width: 1400px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    #duplicate-table {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    #duplicate-table th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    #duplicate-table td {
+        vertical-align: top;
+        padding: 12px;
+    }
+
+    #duplicate-table td:nth-child(2) {
+        text-align: center;
+    }
+
+    .details-cell {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 4px;
+    }
+
+    /* Style for the export buttons */
+    .dt-buttons {
+        margin-bottom: 15px;
+    }
+
+    .dt-button {
+        padding: 6px 12px;
+        margin-right: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+    }
+
+    .dt-button:hover {
+        background-color: #f0f0f0;
+    }
+
+    #download-duplicates-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #download-duplicates-btn:hover {
+        background-color: #45a049;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    #download-duplicates-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+    }
+
+    #download-duplicates-btn:hover {
+        background-color: #218838;
+    }
+
+    #download-duplicates-btn i {
+        font-size: 16px;
+    }
+
+    #summary-table thead th:first-child {
+        cursor: pointer;
+        position: relative;
+    }
+
+    #summary-table thead th:first-child:after {
+        content: '↕';
+        position: absolute;
+        right: 8px;
+        opacity: 0.5;
+    }
+
+    #summary-table thead th:first-child.sorting_asc:after {
+        content: '↑';
+        opacity: 1;
+    }
+
+    #summary-table thead th:first-child.sorting_desc:after {
+        content: '↓';
+        opacity: 1;
+    }
+
+    .sortable {
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .sortable:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .sort-asc::after {
+        content: ' ↑';
+    }
+    
+    .sort-desc::after {
+        content: ' ↓';
+    }
+
+    .highlight-duplicate {
+        animation: highlight 1s ease-in-out;
+    }
+
+    @keyframes highlight {
+        0% { background-color: #ffeb3b; }
+        100% { background-color: transparent; }
+    }
+
+    #check-duplicates {
+        margin: 10px;
+        padding: 8px 15px;
+    }
+
+    #duplicate-count {
+        font-weight: bold;
+    }
+
+    /* Animation for highlighting */
+    @keyframes highlightFade {
+        from { background-color: #ffebee; }
+        to { background-color: transparent; }
+    }
+
+    .highlight-duplicate {
+        animation: highlightFade 2s ease-in-out;
+    }
+
+    .duplicate-highlight {
+        background-color: #ffe6e6 !important;
+        color: red !important;
+        font-weight: bold !important;
+    }
+
+    #check-duplicates {
+        margin: 10px;
+        padding: 8px 15px;
+    }
+
+    #duplicate-count {
+        font-weight: bold;
+    }
+
+    .chart-control {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 150px;
+    }
+    
+    .visualization-section {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+    }
+    
+    canvas {
+        background-color: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .chart-control {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 180px;
+        background-color: white;
+    }
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .chart-wrapper {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .download-chart-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .download-chart-btn:hover {
+        background-color: #45a049;
+    }
+
+    .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    canvas {
+        width: 100% !important;
+        max-height: 400px;
+    }
+
+
+
+
+    .content{
+        background-color: white;
+        width: 100%;
+    }
+
+
+    .vertical-nav {
+        width: 210px;
+        background: #2c3e50;
+        padding: 30px 0;
+        border-radius: 10px;
+    }
+
+    .vertical-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .vertical-nav li {
+        margin: 0;
+        padding: 0;
+    }
+
+    .vertical-nav a {
+        display: flex;
+        align-items: center;
+        padding: 15px 25px;
+        color: #ecf0f1;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .vertical-nav a:hover {
+        background: #34495e;
+        padding-left: 30px;
+    }
+
+    .vertical-nav i {
+        margin-right: 15px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .vertical-nav span {
+        font-size: 16px;
+    }
+
+    /* Active link styling */
+    .vertical-nav a.active {
+        background: #3498db;
+        border-left: 4px solid #2980b9;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .vertical-nav {
+            width: 100%;
+        }
+        
+        .vertical-nav span {
+            display: none;
+        }
+        
+        .vertical-nav a {
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .vertical-nav i {
+            margin: 0;
+            font-size: 20px;
+        }
+    }
+    .secContent{
+        border-top-left-radius: 25px;
+        padding: 20px;
+        background-color: #012141   ;
+        width: 25%;
+        justify-content: center;
+        
+    }
+
+    .content-box{
+        width: 100%;
+    }
+    .container{
+        width: 100%;
+        display: flex; /* Add display flex to enable proper layout */
+        padding: 0; /* Remove any padding that might affect full width */
+        margin: 0; /* Remove any margins that might affect full width */
+         /* Ensure padding doesn't add to width */
+    }
+    .containers{
+        display: flex;
+        width: 100%;
+        flex: 1; /* Allow content to take remaining space */
+        padding: 20px; /* Add padding inside the content area instead */
+    }
+
+    .data-table {
+        margin: 20px 0;
+        overflow-x: auto;
+    }
+
+    #data-table {
+        width: 100% !important;
+        border-collapse: collapse;
+    }
+
+    #data-table th,
+    #data-table td {
+        padding: 12px 8px;
+        white-space: nowrap;
+    }
+
+    #data-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .dataTables_wrapper {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Fix container width issues */
+    .content-box {
+        width: 100%;
+        padding: 20px;
+       
+    }
+
+    .containers {
+        display: flex;
+        width: 100%;
+        
+        box-sizing: border-box;
+    }
+
+    /* Adjust sidebar width */
+    .secContent {
+        width: 250px;
+        flex-shrink: 0;
+    }
+
+    /* Make main content area flexible */
+    .content-box {
+        flex: 1;
+        min-width: 0; /* Prevent content from overflowing */
+    }
+
+    #entries-dropdown {
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    #entries-dropdown:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+    
+    .container{
+        display: flex;
+        width: 100%;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="secContent">
+            <div class="navbarsec">
+                <h1 style="color: white;text-align: center;">Hello, {{ username }}</h1>
+                <nav class="vertical-nav">
+                    <ul>
+                        <li>
+                            <a href="/home">
+                                <i class="fas fa-home"></i>
+                                <span>Home</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/dashboard">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/attendance">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Attendance</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/settings">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/data_upload">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload Data</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Welcome, Admin</h2>
+                <p>CRM Dashboard</p>
+            </div>
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

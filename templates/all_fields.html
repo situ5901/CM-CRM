@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Fields</title>
+</head>
+<body>
+    <h1>Welcome, {{ username }}</h1>
+
+    <!-- Phone search form -->
+    <form method="POST" action="/all_fields">
+        <label for="phone">Search by Phone:</label>
+        <input type="text" id="phone" name="phone" placeholder="Enter phone number">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Table to display data -->
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Partner</th>
+                <th>Phone</th>
+                <th>Disbursed Amount</th>
+                <!-- Add other fields as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in table_data %}
+                <tr>
+                    <td>{{ record.get('partner', 'N/A') }}</td>
+                    <td>{{ record.get('phone', 'N/A') }}</td>
+                    <td>{{ record.get('disbursedamount', 'N/A') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Display totals -->
+    <p>Total Records: {{ total_count }}</p>
+    <p>Total Disbursed Amount: {{ total_disbursed }}</p>
+</body>
+</html>

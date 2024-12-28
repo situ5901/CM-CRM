@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="report-container">
+    <h2>Attendance Report</h2>
+    <div class="filters">
+        <label for="department">Department:</label>
+        <select id="department">
+            <option value="all">All Departments</option>
+            <!-- Add other departments as needed -->
+        </select>
+
+        <label for="shift">Shift:</label>
+        <select id="shift">
+            <option value="all">All Shifts</option>
+            <!-- Add other shifts as needed -->
+        </select>
+
+        <label for="year">Year:</label>
+        <select id="year">
+            <option value="2021">2021</option>
+            <!-- Add other years as needed -->
+        </select>
+
+        <label for="month">Month:</label>
+        <select id="month">
+            <option value="February">February</option>
+            <!-- Add other months as needed -->
+        </select>
+
+        <button class="btn show-report">Show Report</button>
+    </div>
+
+    <table class="attendance-table">
+        <thead>
+            <tr>
+                <th>Employee Id</th>
+                <th>Employee</th>
+                {% for day in range(1, 31) %}
+                    <th>{{ day|default_if_none:"" }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Example rows, replace with dynamic data -->
+            <tr>
+                <td>01</td>
+                <td>EMP Contract</td>
+                {% for day in range(1, 31) %}
+                    <td class="off">OFF</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>02</td>
+                <td>EMP Monthly</td>
+                {% for day in range(1, 31) %}
+                    <td class="present">P</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

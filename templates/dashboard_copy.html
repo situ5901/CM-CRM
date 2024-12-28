@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Modal styling */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .download-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: orange;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #table-view-btn {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+
+
+
+
+
+        <!-- Sidebar content... -->
+
+        <!-- Main content area with shadow box -->
+        <div class="content">
+            <div class="content-box">
+                <div class="welcome-message">Hello, {{ username }}</div>
+                <h2>Dashboard</h2>
+
+                <!-- Table View Button -->
+                <button id="table-view-btn">Table View</button>
+                <button id="all-fields-btn">All Fields</button>
+
+
+                <!-- Plus Button to Add New Dropdowns -->
+                <button id="add-dropdown-btn" style="margin-bottom: 20px;">+</button>
+
+                <!-- Container for Dynamically Created Dropdowns -->
+                <div id="dynamic-dropdowns" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+
+
+                <!-- Lender, Month, Year, Date Range, and Created At Filters -->
+                <div class="filters" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                    <!-- Lender Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="lender-dropdown">Select Lender:</label>
+                        <select id="lender-dropdown" style="width: 100%;">
+                            <option value="">All Lenders</option>
+                            {% for lender in lender_options %}
+                            <option value="{{ lender }}">{{ lender }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Month Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="month-dropdown">Select Month:</label>
+                        <select id="month-dropdown" style="width: 100%;">
+                            <option value="">All Months</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="year-dropdown">Select Year:</label>
+                        <select id="year-dropdown" style="width: 100%;">
+                            <option value="">All Years</option>
+                            <!-- Populate years dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div style="flex: 1;">
+                        <label for="date-range-filter">Select Date Range:</label>
+                        <input type="text" id="date-range-filter" style="width: 100%;" placeholder="Select Date Range">
+                    </div>
+
+                    <!-- Created At Dropdown -->
+                    <div style="flex: 1;">
+                        <label for="created-at-dropdown">Select Created At:</label>
+                        <select id="created-at-dropdown" style="width: 100%;">
+                            <option value="">All Dates</option>
+                            {% for created_at in created_at_options %}
+                            <option value="{{ created_at }}">{{ created_at }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table with highlighted header -->
+                <div class="data-table">
+                    <table id="data-table" class="display">
+                        <thead>
+                            <tr>
+                                <th style="background-color: #4CAF50;">Phone</th>
+                                <th style="background-color: #4CAF50;">Disbursed Amount</th>
+                                <th style="background-color: #4CAF50;">Disbursal Date</th>
+                                <th style="background-color: #4CAF50;">Status</th>
+                                <th style="background-color: #4CAF50;">Lender</th>
+                                <th style="background-color: #4CAF50;">Created At</th>
+                                <th style="background-color: #4CAF50;">Partner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table_data %}
+                            <tr>
+                                <td>{{ row.phone }}</td>
+                                <td>{{ row.disbursedamount }}</td>
+                                <td>{{ row.disbursaldate }}</td>
+                                <td>{{ row.status }}</td>
+                                <td>{{ row.Lender }}</td>
+                                <td>{{ row.createdAt }}</td>
+                                <td>{{ row.partner }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Total:</td>
+                                <td id="total-disbursed">{{ total_disbursed }}</td>
+                                <td colspan="5" id="total-count">{{ total_count }} records</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- Modal Popup for Table View -->
+    <div id="table-view-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <button id="download-button" class="download-button">Download</button>
+            <h3>Filtered Data Summary</h3>
+
+            <!-- New Lender-Wise Summary Table -->
+            <table id="lender-summary-table" class="display" style="width:100%; margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Lender</th>
+                        <th>Total Disbursal Count</th>
+                        <th>Total Disbursed Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="lender-summary-tbody">
+                    <!-- Rows will be inserted dynamically -->
+                </tbody>
+            </table>
+
+            <!-- Existing Summary Table -->
+            <h3>Month-Wise Summary</h3>
+            <table id="summary-table" class="display" style="width:100%; margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Total Disbursal Count</th>
+                        <th>Total Disbursed Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-tbody">
+                    <!-- Rows will be inserted dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- jQuery, DataTables, and Date Range Picker JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const table = $('#data-table').DataTable();
+
+            // Populate Year Dropdown dynamically based on available years
+            function populateYearDropdown() {
+                const yearDropdown = $('#year-dropdown');
+                const startYear = 2020;
+                const endYear = new Date().getFullYear();
+
+                for (let year = startYear; year <= endYear; year++) {
+                    yearDropdown.append(`<option value="${year}">${year}</option>`);
+                }
+            }
+            populateYearDropdown();
+
+            // Function to apply filters including the month filter
+            function applyFilters() {
+                const selectedLender = $('#lender-dropdown').val();
+                const selectedMonth = $('#month-dropdown').val();
+                const selectedYear = $('#year-dropdown').val();
+                const dateRange = $('#date-range-filter').val();
+                const createdAt = $('#created-at-dropdown').val();
+
+                // Reset filters
+                table.column(4).search(''); // Reset Lender column filter
+                table.column(2).search(''); // Reset disbursal date column filter
+                table.column(5).search(''); // Reset created at column filter
+
+                // Filter by lender
+                if (selectedLender) {
+                    table.column(4).search(`^${selectedLender}$`, true, false).draw();
+                }
+
+                // Filter by both month and year if selected
+                if (selectedMonth && selectedYear) {
+                    table.column(2).search(`^${selectedYear}-${selectedMonth}`, true, false).draw();
+                } else if (selectedMonth) {
+                    table.column(2).search(`-${selectedMonth}-`, true, false).draw();
+                } else if (selectedYear) {
+                    table.column(2).search(`^${selectedYear}-`, true, false).draw();
+                }
+
+                // Apply date range filter
+                if (dateRange) {
+                    const [start, end] = dateRange.split(' - ');
+                    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                        const date = data[2]; // Use column 2 (disbursaldate) for filtering
+                        return date >= start && date <= end;
+                    });
+                }
+
+                // Apply created at filter
+                if (createdAt) {
+                    table.column(5).search(`^${createdAt}$`, true, false).draw();
+                }
+
+                table.draw();
+                updateTotals();
+            }
+
+            // Event listeners for filters
+            $('#lender-dropdown, #month-dropdown, #year-dropdown, #date-range-filter, #created-at-dropdown').on('change', applyFilters);
+
+            // Initialize Date Range Picker for date range filter
+            $('#date-range-filter').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    cancelLabel: 'Clear'
+                }
+            });
+
+            // Apply date range filter on date selection
+            $('#date-range-filter').on('apply.daterangepicker', function (ev, picker) {
+                const startDate = picker.startDate.format('YYYY-MM-DD');
+                const endDate = picker.endDate.format('YYYY-MM-DD');
+                $(this).val(startDate + ' - ' + endDate);
+                applyFilters();
+            });
+
+            // Clear date range filter on cancel
+            $('#date-range-filter').on('cancel.daterangepicker', function (ev, picker) {
+                $(this).val('');
+                applyFilters();
+            });
+
+            // Update totals based on filtered data
+            function updateTotals() {
+                let totalDisbursed = 0;
+                let totalCount = 0;
+
+                // Iterate over filtered rows to calculate totals
+                table.rows({ filter: 'applied' }).every(function () {
+                    const data = this.data();
+                    const disbursedAmount = parseFloat(data[1]) || 0;
+                    totalDisbursed += disbursedAmount;
+                    totalCount++;
+                });
+
+                // Display updated totals in the footer
+                $('#total-disbursed').text(totalDisbursed.toFixed(2));
+                $('#total-count').text(`${totalCount} records`);
+            }
+
+            // Open and close modal functionality
+            const modal = $('#table-view-modal');
+            $('#table-view-btn').on('click', function () {
+                updateSummaryTable();
+                $('#summary-table').DataTable();  // Apply DataTables to summary table
+                modal.show();
+            });
+            $('.close').on('click', function () {
+                modal.hide();
+                $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on close
+            });
+            $(window).on('click', function (event) {
+                if ($(event.target).is(modal)) {
+                    modal.hide();
+                    $('#summary-table').DataTable().destroy(); // Destroy DataTables instance on outside click
+                }
+            });
+
+            // Update summary table based on filtered data
+            function updateSummaryTable() {
+                const summaryData = {};
+                const lenderSummaryData = {};
+                table.rows({ filter: 'applied' }).every(function () {
+                    const rowData = this.data();
+                    const month = rowData[2].substr(5, 2); // Extract month from disbursaldate (assuming YYYY-MM-DD format)
+                    const lender = rowData[4];
+                    const disbursedAmount = parseFloat(rowData[1]) || 0;
+
+                    if (!summaryData[month]) {
+                        summaryData[month] = { count: 0, totalAmount: 0 };
+                    }
+                    summaryData[month].count += 1;
+                    summaryData[month].totalAmount += disbursedAmount;
+
+                    if (!lenderSummaryData[lender]) {
+                        lenderSummaryData[lender] = { count: 0, totalAmount: 0 };
+                    }
+                    lenderSummaryData[lender].count += 1;
+                    lenderSummaryData[lender].totalAmount += disbursedAmount;
+                });
+
+                const summaryTbody = $('#summary-tbody');
+                summaryTbody.empty();
+                for (const [month, data] of Object.entries(summaryData)) {
+                    summaryTbody.append(
+                        `<tr>
+                            <td>${month}</td>
+                            <td>${data.count}</td>
+                            <td>${data.totalAmount.toFixed(2)}</td>
+                        </tr>`
+                    );
+                }
+
+                const lenderSummaryTbody = $('#lender-summary-tbody');
+                lenderSummaryTbody.empty();
+                for (const [lender, data] of Object.entries(lenderSummaryData)) {
+                    lenderSummaryTbody.append(
+                        `<tr>
+                            <td>${lender}</td>
+                            <td>${data.count}</td>
+                            <td>${data.totalAmount.toFixed(2)}</td>
+                        </tr>`
+                    );
+                }
+            }
+
+            // Download filtered data as Excel
+            $('#download-button').on('click', function () {
+                const filteredData = table.rows({ filter: 'applied' }).data().toArray();
+                $.ajax({
+                    url: '/download_filtered_data',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ data: filteredData }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        const link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = 'filtered_data.xlsx';
+                        link.click();
+                    },
+                    error: function () {
+                        alert('Error downloading file.');
+                    }
+                });
+            });
+
+            // Initial totals calculation on page load
+            updateTotals();
+        });
+
+
+
+        // ye neeche wala add kiya hai
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const dynamicDropdownsContainer = document.getElementById('dynamic-dropdowns');
+            const addDropdownBtn = document.getElementById('add-dropdown-btn');
+
+            // Define possible header options
+            const headerOptions = {
+                "Lender": ["All Lenders", "Cashe", "Ramfin", "Fibe", "SmartCoin", "MV", "Mpokket", "MoneyView", "MVCancel"],
+                "Month": ["All Months", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                "Year": ["All Years", "2020", "2021", "2022", "2023", "2024"],  // Adjust years dynamically if needed
+                "Status": ["All Statuses", "Approved", "Pending", "Rejected"],  // Example status options
+                // Add other header options as needed
+            };
+
+            // Function to add a new dropdown
+            function addNewDropdown() {
+                // Create a container for each dropdown with label and delete button
+                const dropdownContainer = document.createElement('div');
+                dropdownContainer.style.display = 'flex';
+                dropdownContainer.style.alignItems = 'center';
+                dropdownContainer.style.marginBottom = '10px';
+
+                // Create label for dropdown
+                const dropdownLabel = document.createElement('label');
+                dropdownLabel.textContent = 'Select Filter: ';
+                dropdownLabel.style.marginRight = '10px';
+                dropdownContainer.appendChild(dropdownLabel);
+
+                // Create the dropdown itself
+                const newDropdown = document.createElement('select');
+                newDropdown.style.marginRight = '10px';
+
+                // Populate dropdown with header options
+                Object.keys(headerOptions).forEach(header => {
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = header;
+                    newDropdown.appendChild(option);
+                });
+
+                // Append the dropdown to the container
+                dropdownContainer.appendChild(newDropdown);
+
+                // Create a secondary dropdown to hold the values of the selected header
+                const valueDropdown = document.createElement('select');
+                valueDropdown.style.marginRight = '10px';
+                dropdownContainer.appendChild(valueDropdown);
+
+                // Event listener to update value dropdown when a header is selected
+                newDropdown.addEventListener('change', function () {
+                    const selectedHeader = newDropdown.value;
+                    const values = headerOptions[selectedHeader];
+
+                    // Clear any existing options
+                    valueDropdown.innerHTML = '';
+
+                    // Add the values based on selected header
+                    values.forEach(value => {
+                        const valueOption = document.createElement('option');
+                        valueOption.value = value;
+                        valueOption.textContent = value;
+                        valueDropdown.appendChild(valueOption);
+                    });
+                });
+
+                // Delete button to remove this dropdown
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'x';
+                deleteButton.style.marginLeft = '10px';
+                deleteButton.addEventListener('click', function () {
+                    dropdownContainer.remove();
+                });
+                dropdownContainer.appendChild(deleteButton);
+
+                // Add the dropdown container to the main dynamic dropdowns container
+                dynamicDropdownsContainer.appendChild(dropdownContainer);
+            }
+
+            // Add initial dropdown on page load
+            addDropdownBtn.addEventListener('click', addNewDropdown);
+        });
+
+
+    </script>
+</body>
+
+</html>
