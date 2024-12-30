@@ -993,6 +993,7 @@ table.data {
 
 .welcome-message {
     text-align: right;
+    font-weight: bold;
     font-size: 16px;
     color: #333;
     margin-bottom: 10px;

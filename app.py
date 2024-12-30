@@ -1,13 +1,3 @@
-# from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify ,send_file
-# import pandas as pd
-# from pymongo import MongoClient
-# import os
-# from datetime import datetime
-# from markupsafe import Markup   
-# from flask import jsonify
-# import openpyxl
-# from openpyxl.styles import Font
-# import io
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify ,send_file
 import smtplib
 import pandas as pd
@@ -30,6 +20,10 @@ import base64
 import requests
 import logging
 from pymongo import MongoClient, UpdateMany
+import seaborn as sns
+from collections import defaultdict
+import calendar
+from flask_login import login_required, current_user  # If you're using authentication
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,6 +38,9 @@ client = MongoClient("mongodb+srv://ceo:RuxSmFVLnV7Za7Om@cluster1.zdfza.mongodb.
 db = client['test']
 users_collection = db['users']
 mis_collection = db['mis']
+
+
+
 
 def format_date(date_str):
     """Attempts to parse a date string and return it in 'dd-mm-yyyy' format, ignoring time if present."""
@@ -1033,5 +1030,593 @@ def update_partners():
             client.close()
             logger.info("MongoDB connection closed")
 
+@app.route('/analytical_view')
+def analytical_view():
+    if 'username' in session and session['access_level'] == 'full':
+        try:
+            # Fetch all data from mis_collection
+            data = list(mis_collection.find({}, {
+                '_id': 0, 
+                'phone': 1, 
+                'disbursedamount': 1, 
+                'disbursaldate': 1, 
+                'status': 1, 
+                'Lender': 1, 
+                'createdAt': 1, 
+                'Partner': 1
+            }))
+
+            # Initialize dictionaries with default values
+            chart_data = {
+                'lenders': {'labels': [], 'amounts': []},
+                'monthly': {'labels': [], 'amounts': [], 'counts': []},
+                'partners': {'labels': [], 'amounts': []},
+                'daily': {'labels': [], 'amounts': []}
+            }
+            
+            summary_stats = {
+                'total_amount': 0,
+                'total_count': 0,
+                'average_ticket_size': 0,
+                'top_lender': 'N/A',
+                'top_partner': 'N/A'
+            }
+
+            if data:
+                # Process data for visualizations
+                lender_stats = defaultdict(lambda: {'count': 0, 'amount': 0})
+                monthly_stats = defaultdict(lambda: {'count': 0, 'amount': 0})
+                partner_stats = defaultdict(lambda: {'count': 0, 'amount': 0})
+                daily_trends = defaultdict(lambda: {'count': 0, 'amount': 0})
+
+                total_amount = 0
+                total_count = 0
+
+                for record in data:
+                    try:
+                        amount = float(record.get('disbursedamount', 0))
+                        if amount <= 0:
+                            continue
+                            
+                        # Update statistics
+                        lender = record.get('Lender', 'Unknown')
+                        partner = record.get('Partner', 'No Partner')
+                        
+                        lender_stats[lender]['amount'] += amount
+                        lender_stats[lender]['count'] += 1
+                        
+                        partner_stats[partner]['amount'] += amount
+                        partner_stats[partner]['count'] += 1
+                        
+                        # Process dates
+                        try:
+                            date = datetime.strptime(record.get('disbursaldate', ''), '%d-%m-%Y')
+                            month_key = date.strftime('%B %Y')
+                            monthly_stats[month_key]['amount'] += amount
+                            monthly_stats[month_key]['count'] += 1
+                            
+                            if date >= datetime.now() - timedelta(days=30):
+                                day_key = date.strftime('%Y-%m-%d')
+                                daily_trends[day_key]['amount'] += amount
+                        except ValueError:
+                            continue
+                            
+                        total_amount += amount
+                        total_count += 1
+                            
+                    except (ValueError, TypeError):
+                        continue
+
+                # Prepare chart data
+                chart_data = {
+                    'lenders': {
+                        'labels': list(lender_stats.keys()),
+                        'amounts': [stats['amount'] for stats in lender_stats.values()]
+                    },
+                    'monthly': {
+                        'labels': list(monthly_stats.keys())[-6:],
+                        'amounts': [monthly_stats[month]['amount'] for month in list(monthly_stats.keys())[-6:]],
+                        'counts': [monthly_stats[month]['count'] for month in list(monthly_stats.keys())[-6:]]
+                    },
+                    'partners': {
+                        'labels': list(partner_stats.keys()),
+                        'amounts': [stats['amount'] for stats in partner_stats.values()]
+                    },
+                    'daily': {
+                        'labels': list(daily_trends.keys()),
+                        'amounts': [stats['amount'] for stats in daily_trends.values()]
+                    }
+                }
+
+                # Update summary stats
+                summary_stats = {
+                    'total_amount': total_amount,
+                    'total_count': total_count,
+                    'average_ticket_size': total_amount / total_count if total_count > 0 else 0,
+                    'top_lender': max(lender_stats.items(), key=lambda x: x[1]['amount'])[0] if lender_stats else 'N/A',
+                    'top_partner': max(partner_stats.items(), key=lambda x: x[1]['amount'])[0] if partner_stats else 'N/A'
+                }
+
+            return render_template(
+                'analytical_view.html',
+                username=session['username'],
+                chart_data=chart_data,
+                summary_stats=summary_stats
+            )
+
+        except Exception as e:
+            logger.error(f"Error in analytical_view: {str(e)}")
+            return f"An error occurred while processing the data: {str(e)}", 500
+    else:
+        return "Unauthorized Access", 403
+
+@app.route('/update-charts', methods=['GET'])
+def update_charts():
+    try:
+        # Get filter parameters
+        date_range = request.args.get('dateRange')
+        lender = request.args.get('lender')
+        partner = request.args.get('partner')
+        amount_range = request.args.get('amountRange', 'all')
+        start_date = request.args.get('startDate')
+        end_date = request.args.get('endDate')
+
+        # Build MongoDB query
+        query = {}
+
+        # Date filter
+        if date_range != 'custom':
+            days = int(date_range)
+            start_date = (datetime.now() - timedelta(days=days)).strftime('%d-%m-%Y')
+            query['disbursaldate'] = {'$gte': start_date}
+        elif start_date and end_date:
+            query['disbursaldate'] = {
+                '$gte': datetime.strptime(start_date, '%Y-%m-%d').strftime('%d-%m-%Y'),
+                '$lte': datetime.strptime(end_date, '%Y-%m-%d').strftime('%d-%m-%Y')
+            }
+
+        # Lender filter
+        if lender != 'all':
+            query['Lender'] = lender
+
+        # Partner filter
+        if partner != 'all':
+            query['Partner'] = partner
+
+        # Amount range filter with numeric conversion
+        if amount_range != 'all':
+            range_limits = {
+                '0-100000': [0, 100000],          # 0 - 1L
+                '100000-500000': [100000, 500000], # 1L - 5L
+                '500000-1000000': [500000, 1000000], # 5L - 10L
+                '1000000+': [1000000, float('inf')] # 10L+
+            }
+            
+            if amount_range in range_limits:
+                min_amount, max_amount = range_limits[amount_range]
+                # Convert string amounts to float for comparison
+                query['$expr'] = {
+                    '$and': [
+                        {'$gte': [{'$toDouble': '$disbursedamount'}, min_amount]},
+                        {'$lt': [{'$toDouble': '$disbursedamount'}, max_amount]} if max_amount != float('inf')
+                        else {'$gte': [{'$toDouble': '$disbursedamount'}, min_amount]}
+                    ]
+                }
+
+        # Fetch filtered data
+        data = list(mis_collection.find(query, {
+            '_id': 0,
+            'disbursedamount': 1,
+            'disbursaldate': 1,
+            'Lender': 1,
+            'Partner': 1
+        }))
+
+        # Calculate summary statistics
+        total_amount = sum(float(record['disbursedamount']) for record in data if record.get('disbursedamount'))
+        total_count = len(data)
+        avg_ticket_size = total_amount / total_count if total_count > 0 else 0
+
+        # Prepare chart data
+        monthly_data = defaultdict(lambda: {'amount': 0, 'count': 0})
+        lender_data = defaultdict(float)
+        partner_data = defaultdict(float)
+
+        for record in data:
+            try:
+                amount = float(record['disbursedamount'])
+                date = datetime.strptime(record['disbursaldate'], '%d-%m-%Y')
+                month_key = date.strftime('%B %Y')
+                
+                monthly_data[month_key]['amount'] += amount
+                monthly_data[month_key]['count'] += 1
+                lender_data[record.get('Lender', 'Unknown')] += amount
+                partner_data[record.get('Partner', 'No Partner')] += amount
+            except (ValueError, TypeError):
+                continue
+
+        # Calculate loan distribution data
+        loan_distribution = {
+            '0-100000': 0,
+            '100000-500000': 0,
+            '500000-1000000': 0,
+            '1000000+': 0
+        }
+
+        for record in data:
+            try:
+                amount = float(record['disbursedamount'])
+                if amount <= 100000:
+                    loan_distribution['0-100000'] += 1
+                elif amount <= 500000:
+                    loan_distribution['100000-500000'] += 1
+                elif amount <= 1000000:
+                    loan_distribution['500000-1000000'] += 1
+                else:
+                    loan_distribution['1000000+'] += 1
+            except (ValueError, TypeError):
+                continue
+
+        response_data = {
+            'summary': {
+                'total_amount': total_amount,
+                'total_count': total_count,
+                'avg_ticket_size': avg_ticket_size
+            },
+            'charts': {
+                'monthly': {
+                    'labels': list(monthly_data.keys()),
+                    'amounts': [data['amount'] for data in monthly_data.values()],
+                    'counts': [data['count'] for data in monthly_data.values()]
+                },
+                'lenders': {
+                    'labels': list(lender_data.keys()),
+                    'amounts': list(lender_data.values())
+                },
+                'partners': {
+                    'labels': list(partner_data.keys()),
+                    'amounts': list(partner_data.values())
+                },
+                'loan_distribution': {
+                    'labels': ['0-1L', '1L-5L', '5L-10L', '10L+'],
+                    'data': list(loan_distribution.values())
+                }
+            }
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        logger.error(f"Error in update_charts: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get-filter-options')
+def get_filter_options():
+    try:
+        # Get unique values from database
+        pipeline = [
+            {
+                '$facet': {
+                    'lenders': [{'$group': {'_id': '$Lender'}}],
+                    'partners': [{'$group': {'_id': '$Partner'}}],
+                    'emp_types': [{'$group': {'_id': '$emp'}}],
+                    'statuses': [{'$group': {'_id': '$status'}}]
+                }
+            }
+        ]
+        
+        result = list(mis_collection.aggregate(pipeline))[0]
+        
+        # Process and clean the data
+        filters = {
+            'lenders': sorted([l['_id'] for l in result['lenders'] if l['_id']]),
+            'partners': sorted([p['_id'] for p in result['partners'] if p['_id']]),
+            'emp_types': sorted([e['_id'] for e in result['emp_types'] if e['_id']]),
+            'statuses': sorted([s['_id'] for s in result['statuses'] if s['_id']])
+        }
+        
+        return jsonify(filters)
+    except Exception as e:
+        logger.error(f"Error getting filter options: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get-analysis-data', methods=['GET', 'POST'])
+def get_analysis_data():
+    try:
+        filters = request.get_json() if request.method == 'POST' else {}
+        query = {}
+
+        # Build query based on filters
+        if filters.get('lender') and filters['lender'] != 'all':
+            query['Lender'] = filters['lender']
+        if filters.get('partner') and filters['partner'] != 'all':
+            query['Partner'] = filters['partner']
+        if filters.get('emp_type') and filters['emp_type'] != 'all':
+            query['emp'] = filters['emp_type']
+        if filters.get('status') and filters['status'] != 'all':
+            query['status'] = filters['status']
+        if filters.get('dateRange') and filters['dateRange'] != 'all':
+            days = int(filters['dateRange'])
+            start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+            query['disbursaldate'] = {'$gte': start_date}
+
+        # Distribution Analysis
+        pipeline_distribution = [
+            {'$match': query},
+            {
+                '$group': {
+                    '_id': {
+                        'segment': '$emp',
+                        'status': '$status'
+                    },
+                    'count': {'$sum': 1},
+                    'total_amount': {'$sum': {'$toDouble': '$disbursedamount'}}
+                }
+            }
+        ]
+
+        # Summary Statistics
+        pipeline_summary = [
+            {'$match': query},
+            {
+                '$group': {
+                    '_id': None,
+                    'total_disbursed': {'$sum': {'$toDouble': '$disbursedamount'}},
+                    'total_count': {'$sum': 1},
+                    'success_count': {
+                        '$sum': {
+                            '$cond': [{'$eq': ['$status', 'Disbursed']}, 1, 0]
+                        }
+                    },
+                    'avg_processing_time': {
+                        '$avg': {
+                            '$subtract': [
+                                {'$dateFromString': {'dateString': '$disbursaldate'}},
+                                {'$dateFromString': {'dateString': '$createdAt'}}
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+
+        distribution_data = list(mis_collection.aggregate(pipeline_distribution))
+        summary_data = list(mis_collection.aggregate(pipeline_summary))
+
+        # Process summary data
+        summary = {}
+        if summary_data:
+            summary = summary_data[0]
+            summary['success_rate'] = (summary['success_count'] / summary['total_count'] * 100) if summary['total_count'] > 0 else 0
+            summary['avg_ticket_size'] = summary['total_disbursed'] / summary['total_count'] if summary['total_count'] > 0 else 0
+            summary['avg_processing_time'] = round(summary['avg_processing_time'].total_seconds() / (24 * 3600), 1) if summary.get('avg_processing_time') else 0
+
+        return jsonify({
+            'distribution': distribution_data,
+            'summary': summary
+        })
+
+    except Exception as e:
+        logger.error(f"Error in get-analysis-data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+
+
+
+
+
+
+@app.route('/analytical')
+def analytical():
+    try:
+        # Get unique lenders
+        lenders = list(mis_collection.distinct("Lender"))
+        
+        # Get unique partners
+        partners = list(mis_collection.distinct("Partner"))
+        
+        # Get unique statuses
+        statuses = list(mis_collection.distinct("status"))
+        
+        # Define amount ranges
+        amount_ranges = [
+            "0-5,000",
+            "5,000-25,000",
+            "25,000-50,000",
+            "50,000-1,00,000",
+            "1,00,000+"
+        ]
+
+        # Basic Stats
+        pipeline = [
+            {
+                "$group": {
+                    "_id": None,
+                    "total_disbursed": {"$sum": {"$toDouble": "$disbursedamount"}},
+                    "total_count": {"$sum": 1},
+                    "avg_ticket": {"$avg": {"$toDouble": "$disbursedamount"}}
+                }
+            }
+        ]
+        basic_stats = list(mis_collection.aggregate(pipeline))[0]
+
+        # Top Lender and Partner
+        top_entities_pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "lender": "$Lender",
+                        "partner": "$Partner"
+                    },
+                    "amount": {"$sum": {"$toDouble": "$disbursedamount"}},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"amount": -1}},
+            {"$limit": 1}
+        ]
+        top_entity = list(mis_collection.aggregate(top_entities_pipeline))[0]
+
+        # Monthly Trends
+        monthly_pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "month": {"$substr": ["$disbursaldate", 3, 2]},
+                        "year": {"$substr": ["$disbursaldate", 6, 2]}
+                    },
+                    "amount": {"$sum": {"$toDouble": "$disbursedamount"}},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
+        ]
+        monthly_data = list(mis_collection.aggregate(monthly_pipeline))
+
+        # Loan Amount Distribution
+        amount_ranges = [
+            {"min": 0, "max": 5000},
+            {"min": 5001, "max": 25000},
+            {"min": 25001, "max": 50000},
+            {"min": 50001, "max": 100000},
+            {"min": 100001, "max": float('inf')}
+        ]
+
+        distribution_pipeline = [
+            {
+                "$bucket": {
+                    "groupBy": {"$toDouble": "$disbursedamount"},
+                    "boundaries": [0, 5001, 25001, 50001, 100001, float('inf')],
+                    "default": "Other",
+                    "output": {
+                        "count": {"$sum": 1}
+                    }
+                }
+            }
+        ]
+        amount_distribution = list(mis_collection.aggregate(distribution_pipeline))
+
+        return render_template('analytical.html',
+                             lenders=lenders,
+                             partners=partners,
+                             statuses=statuses,
+                             amount_ranges=amount_ranges,
+                             total_disbursed=basic_stats['total_disbursed'],
+                             total_count=basic_stats['total_count'],
+                             avg_ticket=basic_stats['avg_ticket'],
+                             top_lender=top_entity['_id']['lender'],
+                             top_partner=top_entity['_id']['partner'],
+                             monthly_data=monthly_data,
+                             amount_distribution=amount_distribution)
+
+    except Exception as e:
+        logger.error(f"Error in analytical route: {str(e)}")
+        return "An error occurred", 500
+
+@app.route('/apply_filters', methods=['POST'])
+def apply_filters():
+    try:
+        # Get filter data from request
+        filter_data = request.get_json()
+        
+        # Initialize query
+        query = {}
+        
+        # Date range filter
+        date_range = filter_data.get('date_range')
+        if date_range:
+            today = datetime.now()
+            if date_range == "Last 30 Days":
+                start_date = today - timedelta(days=30)
+            elif date_range == "Last 90 Days":
+                start_date = today - timedelta(days=90)
+            if date_range in ["Last 30 Days", "Last 90 Days"]:
+                query['disbursaldate'] = {
+                    '$gte': start_date.strftime('%d-%m-%Y')
+                }
+
+        # Lender filter
+        lender = filter_data.get('lender')
+        if lender and lender != "All Lenders":
+            query['Lender'] = lender
+
+        # Partner filter
+        partner = filter_data.get('partner')
+        if partner and partner != "All Partners":
+            query['Partner'] = partner
+
+        # Status filter
+        status = filter_data.get('status')
+        if status and status != "All Status":
+            query['status'] = status
+
+        # Amount range filter
+        amount_range = filter_data.get('amount_range')
+        if amount_range and amount_range != "All Amounts":
+            try:
+                if '-' in amount_range:
+                    min_val, max_val = amount_range.replace(',', '').split('-')
+                    query['disbursedamount'] = {
+                        '$gte': float(min_val),
+                        '$lte': float(max_val)
+                    }
+                elif '+' in amount_range:
+                    min_val = float(amount_range.replace(',', '').replace('+', ''))
+                    query['disbursedamount'] = {'$gte': min_val}
+            except ValueError:
+                print(f"Error parsing amount range: {amount_range}")
+
+        # Get filtered data
+        pipeline = [
+            {"$match": query},
+            {
+                "$group": {
+                    "_id": {
+                        "month": {"$substr": ["$disbursaldate", 3, 2]},
+                        "year": {"$substr": ["$disbursaldate", 6, 2]}
+                    },
+                    "monthly_amount": {"$sum": {"$toDouble": "$disbursedamount"}},
+                    "monthly_count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
+        ]
+
+        filtered_results = list(mis_collection.aggregate(pipeline))
+
+        # Format the response data
+        response_data = {
+            'monthly_amounts': [item['monthly_amount'] for item in filtered_results],
+            'monthly_counts': [item['monthly_count'] for item in filtered_results],
+            'labels': [f"{item['_id']['month']}/{item['_id']['year']}" for item in filtered_results]
+        }
+
+        return jsonify({
+            'status': 'success',
+            'data': response_data
+        })
+
+    except Exception as e:
+        print(f"Error in apply_filters: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/ChatBox')  # Changed to match the HTML link case
+def chatbox():
+    return render_template('ChatBox.html')
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+    
+
+
+
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
