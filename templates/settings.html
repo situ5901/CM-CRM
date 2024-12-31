@@ -1,59 +1,571 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block content %}
-<div class="settings-container" style="width: 100%;">
-    <h2>Settings</h2>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
 
-    <!-- Section for Changing Password -->
-    <div class="change-password-section">
-        <h3>Change Password</h3>
-        <form action="{{ url_for('change_password') }}" method="POST">
-            <label for="current_password">Current Password:</label>
-            <input type="password" id="current_password" name="current_password" required>
-            
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required>
-            
-            <label for="confirm_password">Confirm New Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-            <button type="submit">Update Password</button>
-        </form>
-    </div>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <style>
+        .main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            padding: 10px;
+            width: 100%;
+            flex-direction: row;
+            overflow-x: hidden;
+        }
 
-    <!-- Section for User Creation with Role Management -->
-    <div class="create-user-section">
-        <h3>Create New User</h3>
-        <form action="{{ url_for('create_user') }}" method="POST">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+        .cont {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+        .cont h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            line-height: 1.4;
+        }
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+        .mainone {
+            width: 250px;
+            padding: 20px;
+            border-top-left-radius: 20px;
+            height: 100%;
+            background-color: #012141;
+            transition: all 0.3s ease;
+        }
 
-            <!-- Role Selection -->
-            <label for="role">Role:</label>
-            <select id="role" name="role">
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
-            </select>
+        .maintwo {
+            width: calc(100% - 250px);
+            height: 100vh;
+            overflow: hidden;
+            background-color: white;
+        }
 
-            <!-- Rights Management Section -->
-            <h4>Assign Rights</h4>
-            <div class="rights-section">
-                <label><input type="checkbox" name="rights" value="view_reports"> View Reports</label>
-                <label><input type="checkbox" name="rights" value="edit_profile"> Edit Profile</label>
-                <label><input type="checkbox" name="rights" value="manage_users"> Manage Users</label>
-                <label><input type="checkbox" name="rights" value="access_financials"> Access Financials</label>
-                <label><input type="checkbox" name="rights" value="generate_reports"> Generate Reports</label>
+        .gradient-text {
+            text-align: center;
+            background: linear-gradient(to right,
+                    #ff0000,
+                    /* Red */
+                    #ff7f00,
+                    /* Orange */
+                    #ffff00,
+                    /* Yellow */
+                    #00ff00,
+                    /* Green */
+                    #0000ff,
+                    /* Blue */
+                    #4b0082,
+                    /* Indigo */
+                    #8f00ff
+                    /* Violet */
+                );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 54px;
+            animation: rainbow 12s linear infinite;
+            background-size: 400% 100%;
+        }
+
+        @keyframes rainbow {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 300% 0;
+            }
+        }
+
+
+        .vertical-nav {
+            width: 210px;
+            background: #2c3e50;
+            padding: 20px 0;
+            border-radius: 10px;
+        }
+
+        .vertical-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .vertical-nav li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .vertical-nav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .vertical-nav a:hover {
+            background: #34495e;
+            padding-left: 30px;
+        }
+
+        .vertical-nav i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .vertical-nav span {
+            font-size: 16px;
+        }
+
+        /* Active link styling */
+        .vertical-nav a.active {
+            background: #3498db;
+            border-left: 4px solid #2980b9;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .vertical-nav {
+                width: 100%;
+            }
+
+            .vertical-nav span {
+                display: none;
+            }
+
+            .vertical-nav a {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            .vertical-nav i {
+                margin: 0;
+                font-size: 20px;
+            }
+        }
+
+        .flx {
+            display: flex;
+            width: 100%;
+            text-align: center;
+
+
+        }
+
+        .cont {
+            width: 60%;
+        }
+
+        .cont2 {
+            width: 40%;
+            text-align: center;
+
+        }
+
+        .hero-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            padding: 1rem;
+            margin-top: -189px;
+            flex-direction: row;
+        }
+
+        .cont {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+            gap: 2rem;
+            margin-top: 240px;
+            text-align: center;
+        }
+
+        .cont img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .cont h1 {
+            margin: 10px;
+            font-size: 2.5rem;
+            line-height: 1.4;
+        }
+
+        .lottie-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .lottie-container dotlottie-player {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        .cont {
+            display: inline;
+        }
+
+        .one {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .two {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .three {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .four {
+            height: 100px;
+            width: 120px;
+            border-radius: 10px;
+            background-color: #243771;
+        }
+
+        .focont {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        /* Common styles for all cards */
+        .one,
+        .two,
+        .three,
+        .four {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 15px;
+            gap: 10px;
+            /* Space between icon and text */
+            width: calc(25% - 15px);
+            min-width: 100px;
+            height: auto;
+        }
+
+        /* Icon styles */
+        .one i,
+        .two i,
+        .three i,
+        .four i {
+            font-size: 2rem;
+            /* Adjust icon size */
+            margin-bottom: 10px;
+        }
+
+        /* Text styles */
+        h4 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Individual card hover effects (optional) */
+        .one:hover,
+        .two:hover,
+        .three:hover,
+        .four:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+
+        /* Media Queries */
+        @media (max-width: 1024px) {
+            .hero-section {
+                flex-direction: column;
+            }
+
+            .cont h1 {
+                font-size: 24px;
+            }
+
+            .gradient-text {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .mainone {
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+            }
+
+            .maintwo {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .one, .two, .three, .four {
+                width: calc(50% - 15px);
+            }
+
+            .lottie-container lottie-player {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .one, .two, .three, .four {
+                width: calc(100% - 15px);
+            }
+
+            .cont img {
+                max-width: 200px;
+            }
+
+            .gradient-text {
+                font-size: 28px;
+            }
+
+            .hero-section {
+                padding: 0.5rem;
+            }
+        }
+.logo-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    background-color: #012141;  /* Matching your theme */
+    margin-bottom: 20px;
+}
+
+        .settings-container {
+            margin: 0 auto;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+
+        .settings-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .settings-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .settings-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .settings-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <di class="mainone">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='cm.png') }}" alt="Logo" class="logo">
+                <h3 style="color: white;text-align: center;">{{ username }}</h3>
             </div>
+            <nav class="vertical-nav">
+                <ul>
+                    <li>
+                        <a href="/home">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/attendance">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Attendance</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/analytical">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/data_upload">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload Data</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/ChatBox">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>ChatBox</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
 
-            <button type="submit">Create User</button>
-        </form>
+                </ul>
+            </nav>
+        </di>
+
+<div class="maintwo">
+    <div class="settings-container" style="width: 100%; max-width: 100%; padding: 20px; margin-top: 20px; height: calc(100vh - 40px); overflow-y: auto;">
+        <div class="settingheader" style="background-color: #012141; height: 50px; display: flex; justify-content: center; align-items: center;">
+            <img src="{{ url_for('static', filename='cm.png') }}" alt="Logo" class="logo">
+        </div>
+
+        <!-- Section for Changing Password -->
+        <div class="change-password-section">
+            <form action="{{ url_for('change_password') }}" method="POST">
+                <label for="current_password">Current Password:</label>
+                <input type="password" id="current_password" name="current_password" required>
+                
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password" required>
+                
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+
+                <button type="submit">Update Password</button>
+            </form>
+        </div>
+
+        <!-- Section for User Creation with Role Management -->
+        <div class="create-user-section">
+            <h3>Create New User</h3>
+            <form action="{{ url_for('create_user') }}" method="POST">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+
+                <!-- Role Selection -->
+                <label for="role">Role:</label>
+                <select id="role" name="role">
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Employee">Employee</option>
+                </select>
+
+                <!-- Rights Management Section -->
+                <h4>Assign Rights</h4>
+                <div class="rights-section">
+                    <label><input type="checkbox" name="rights" value="view_reports"> View Reports</label>
+                    <label><input type="checkbox" name="rights" value="edit_profile"> Edit Profile</label>
+                    <label><input type="checkbox" name="rights" value="manage_users"> Manage Users</label>
+                    <label><input type="checkbox" name="rights" value="access_financials"> Access Financials</label>
+                    <label><input type="checkbox" name="rights" value="generate_reports"> Generate Reports</label>
+                </div>
+
+                <button type="submit">Create User</button>
+            </form>
+        </div>
     </div>
 </div>
-{% endblock %}
+
+<style>
+    .maintwo {
+        width: calc(100% - 250px);
+        height: 100vh;
+        overflow: hidden;
+        background-color: white;
+    }
+
+    .settings-container {
+        margin: 0 auto;
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+    }
+
+    .settings-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .settings-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .settings-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .settings-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+
+</body>
+
+</html>
