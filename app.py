@@ -20,6 +20,7 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:RuxSmFVLnV7Za7Om@cluster1.zdfza.mongodb.net/')
 
 CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
 
