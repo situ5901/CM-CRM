@@ -882,7 +882,9 @@
                 <!-- Table View Button -->
                 <button id="table-view-btn">Table View</button>
                 <button id="updatePartnerBtn" class="btn btn-primary">Update Partner Info</button>
-                <button id="allFieldsBtn" class="btn btn-primary">Save DB</button>
+                <button id="saveDbBtn" onclick="savePartnersToDb()" class="btn btn-primary">
+                    Save DB
+                </button>
 
                 <!-- Send Email Button -->
 
@@ -1025,6 +1027,9 @@
                     });
                 </script>
 
+
+
+
                 <!-- Plus Button to Add New Dropdowns -->
                 <button id="add-dropdown-btn" style="margin-bottom: 20px;">+</button>
 
@@ -1166,6 +1171,37 @@
                         </table>
 
                         <script>
+
+
+function savePartnersToDb() {
+    // Show loading indicator
+    document.getElementById('saveDbBtn').disabled = true;
+    document.getElementById('saveDbBtn').innerHTML = 'Saving...';
+
+    fetch('/save_partners_to_db', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving to database: ' + error);
+    })
+    .finally(() => {
+        // Reset button state
+        document.getElementById('saveDbBtn').disabled = false;
+        document.getElementById('saveDbBtn').innerHTML = 'Save DB';
+    });
+}
                             // Add these functions to your existing JavaScript
                             $(document).ready(function () {
                                 let currentView = 'month';
@@ -1450,7 +1486,7 @@
                                 <td>{{ row.status }}</td>
                                 <td>{{ row.Lender }}</td>
                                 <td>{{ row.createdAt }}</td>
-                                <td>{{ row.Partner }}</td>
+                                <td></td>  <!-- Empty partner cell -->
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -3077,7 +3113,7 @@
     // Function to update partner information with batch processing
     async function updatePartnerInfo() {
         const table = $('#data-table').DataTable();
-        const loadingDiv = $('<div>Requesting partner info for phones...</div>')
+        const loadingDiv = $('<div>Updating partner information...</div>')
             .css({
                 position: 'fixed',
                 top: '50%',
@@ -3093,62 +3129,52 @@
         $('body').append(loadingDiv);
 
         try {
-            // Collect all phone numbers
+            // Collect phone numbers
             const allPhones = [];
-            table.rows().every(function () {
+            table.rows().every(function() {
                 const phone = this.data()[0];
                 if (phone) allPhones.push(phone.toString().trim());
             });
 
             if (allPhones.length === 0) {
-                throw new Error('No phone numbers found in table');
+                throw new Error('No phone numbers found');
             }
 
-            // Process in larger batches
-            const batchSize = 5000; // Increased batch size
+            // Process in batches of 1000 with 3-second delay
+            const batchSize = 1000;
             const batches = [];
+            
             for (let i = 0; i < allPhones.length; i += batchSize) {
                 batches.push(allPhones.slice(i, i + batchSize));
             }
 
-            // Process all batches concurrently
-            loadingDiv.text(`Requesting partner info for phones...`);
-
-            const batchPromises = batches.map(async (batch, index) => {
-                try {
-                    const batchData = await getPartnerInfo(batch);
-                    loadingDiv.text(`Completed batch ${index + 1}/${batches.length}`);
-                    return batchData;
-                } catch (error) {
-                    console.error(`Error in batch ${index + 1}:`, error);
-                    return {};
+            for (let i = 0; i < batches.length; i++) {
+                loadingDiv.text(`Processing batch ${i + 1}/${batches.length}...`);
+                
+                // Add 3-second delay between batches
+                if (i > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
-            });
 
-            // Wait for all batches to complete
-            const batchResults = await Promise.all(batchPromises);
+                const batch = batches[i];
+                const partnerData = await getPartnerInfo(batch);
 
-            // Merge all batch results
-            const partnerInfo = Object.assign({}, ...batchResults);
+                // Update table with partner info for this batch
+                table.rows().every(function() {
+                    const phone = this.data()[0].toString().trim();
+                    if (batch.includes(phone) && partnerData[phone]) {
+                        const partner = partnerData[phone].partner;
+                        const row = $(this.node());
+                        const partnerCell = row.find('td:last');
+                        partnerCell.text(partner || '');
+                    }
+                });
 
-            // Update table with all partner info at once
-            let updatedCount = 0;
-            table.rows().every(function () {
-                const phone = this.data()[0].toString().trim();
-                if (partnerInfo[phone]) {
-                    const partner = partnerInfo[phone].partner;
-                    const row = $(this.node());
-                    const partnerCell = row.find('td:last');
-                    partnerCell.text(partner);
-                    updatedCount++;
-                }
-            });
+                // Redraw table after each batch
+                table.draw(false);
+            }
 
-            //         table.draw(false);
-            //         alert(`Partner information updated successfully:
-            // - Total records: ${allPhones.length}
-            // - Updated records: ${updatedCount}
-            // - Batches processed: ${batches.length}`);
+            alert('Partner information updated successfully!');
 
         } catch (error) {
             console.error('Update failed:', error);
@@ -3158,181 +3184,30 @@
         }
     }
 
-    // Helper function to get partner info with timeout and retry
-    async function getPartnerInfo(phones) {
-        const maxRetries = 3;
-        const timeout = 30000; // 30 seconds timeout
-
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-                const response = await fetch('/api/internal/get-partner-info', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ phones }),
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                return await response.json();
-            } catch (error) {
-                if (attempt === maxRetries) {
-                    throw error;
-                }
-                console.warn(`Attempt ${attempt} failed, retrying...`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            }
-        }
-    }
-
-    // Function for "All Fields" button
-    async function updateAllFields() {
-        const table = $('#data-table').DataTable();
-        const loadingDiv = $('<div>Sending partner data to database...</div>')
-            .css({
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                padding: '20px',
-                background: 'rgba(0,0,0,0.8)',
-                color: 'white',
-                borderRadius: '5px',
-                zIndex: 9999
-            });
-
-        $('body').append(loadingDiv);
-
-        try {
-            // Collect all phone numbers and their current partner info
-            const partnerData = {};
-            table.rows().every(function () {
-                const rowData = this.data();
-                const phone = rowData[0];
-                const partner = $(this.node()).find('td:last').text();
-                if (phone && partner) {
-                    partnerData[phone] = { partner: partner };
-                }
-            });
-
-            if (Object.keys(partnerData).length === 0) {
-                throw new Error('No partner data found to update');
-            }
-
-            // Update database
-            const result = await updateDatabase(partnerData);
-
-            //         alert(`Database update complete:
-            // - Records processed: ${Object.keys(partnerData).length}
-            // - Records updated: ${result.updatedCount}
-            // ${result.message}`);
-
-        } catch (error) {
-            console.error('Database update failed:', error);
-            alert(`Failed to update database: ${error.message}`);
-        } finally {
-            loadingDiv.remove();
-        }
-    }
-
-    // Helper function to update database
-    async function updateDatabase(partnerData) {
-        try {
-            console.log('Attempting to update database with partner data:', partnerData);
-
-            const response = await fetch('/api/internal/update-partners', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ partnerData }),
-                credentials: 'same-origin'
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                console.error('Server Error:', result);
-                throw new Error(result.message || 'Failed to update database');
-            }
-
-            // Log success information
-            console.log('Database update successful:', result);
-            if (result.updates) {
-                console.log('Updated records:');
-                Object.entries(result.updates).forEach(([phone, update]) => {
-                    console.log(`Phone: ${phone}`);
-                    console.log(`- Old partner: ${update.old_partner || 'None'}`);
-                    console.log(`- New partner: ${update.new_partner}`);
-                });
-            }
-
-            return result;
-
-        } catch (error) {
-            console.error('Database Update Error:', error);
-            alert(`Failed to update database: ${error.message}`);
-            throw error;
-        }
-    }
-
-    // Helper function to get partner information from API
     async function getPartnerInfo(phones) {
         try {
-            const API_ENDPOINT = '/api/internal/get-partners';
-
+            const API_ENDPOINT = '/get_partners';
             console.log('Requesting partner info for phones:', phones);
 
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ phones }),
-                credentials: 'same-origin'
+                body: JSON.stringify({ phones: phones })
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API Error Response:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: errorText
-                });
-                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                throw new Error(`API request failed: ${response.status}`);
             }
 
             const data = await response.json();
-
-            // Transform the response data to match the expected format
-            const transformedData = {};
-            for (const item of data) {
-                if (item.phone && item.partner) {
-                    transformedData[item.phone] = { partner: item.partner };
-                }
-            }
-
-            console.log('Partner data received:', transformedData);
-            return transformedData;
+            console.log('Partner data received:', data);
+            return data.data; // Assuming the API returns { data: { phone: { partner: "name" } } }
 
         } catch (error) {
             console.error('Partner API Error:', error);
-            return phones.reduce((acc, phone) => {
-                acc[phone] = { partner: 'Unknown' };
-                return acc;
-            }, {});
+            throw error;
         }
     }
 
@@ -4067,6 +3942,77 @@
 
         // Initial update based on default view
         updateSummaryTable();
+    });
+
+    // Add this function for saving to database
+    async function saveToDatabase() {
+        const table = $('#data-table').DataTable();
+        const loadingDiv = $('<div>Saving to database...</div>')
+            .css({
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                padding: '20px',
+                background: 'rgba(0,0,0,0.8)',
+                color: 'white',
+                borderRadius: '5px',
+                zIndex: 9999
+            });
+
+        $('body').append(loadingDiv);
+
+        try {
+            // Collect all table data
+            const tableData = [];
+            table.rows().every(function() {
+                const rowData = this.data();
+                tableData.push({
+                    phone: rowData[0],
+                    disbursedamount: rowData[1],
+                    disbursaldate: rowData[2],
+                    status: rowData[3],
+                    Lender: rowData[4],
+                    createdAt: rowData[5],
+                    Partner: rowData[6]
+                });
+            });
+
+            // Send data to backend
+            const response = await fetch('/save_to_db', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data: tableData })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to save: ${response.status}`);
+            }
+
+            const result = await response.json();
+            alert('Data saved successfully!');
+            console.log('Save result:', result);
+
+        } catch (error) {
+            console.error('Save failed:', error);
+            alert(`Failed to save data: ${error.message}`);
+        } finally {
+            loadingDiv.remove();
+        }
+    }
+
+    // Add event listeners when document is ready
+    $(document).ready(function() {
+        // Existing event listener
+        $('#updatePartnerBtn').click(updatePartnerInfo);
+        
+        // New event listener for Save DB button
+        $('#allFieldsBtn').click(function() {
+            console.log('Save DB button clicked');
+            saveToDatabase();
+        });
     });
 </script>
 </body>

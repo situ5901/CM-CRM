@@ -20,15 +20,23 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:RuxSmFVLnV7Za7Om@cluster1.zdfza.mongodb.net/')
+app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net/')
 
 CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
 
-# Existing MongoDB connection string
-client = MongoClient("mongodb+srv://ceo:RuxSmFVLnV7Za7Om@cluster1.zdfza.mongodb.net/")
-db = client['test']
+# Update MongoDB connection setup
+client = MongoClient("mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net/")
+db = client['test']  # Make sure this database name is correct
 users_collection = db['users']
 mis_collection = db['mis']
+
+# Add error handling and verification
+try:
+    # Verify connection
+    client.admin.command('ping')
+    print("MongoDB connection successful!")
+except Exception as e:
+    print(f"MongoDB connection failed: {str(e)}")
 
 
     
@@ -98,149 +106,156 @@ from markupsafe import Markup
 def data_upload():
     if 'username' in session:
         if request.method == 'POST':
-            files = request.files.getlist('file')
-            collection_type = request.form.get('collection_type')
-            lender_name = request.form.get('lender')
+            try:
+                files = request.files.getlist('file')
+                collection_type = request.form.get('collection_type')
+                lender_name = request.form.get('lender')
 
-            if not files or files[0].filename == '':
-                flash('No selected files')
-                return redirect(request.url)
+                if not files or files[0].filename == '':
+                    flash('No selected files')
+                    return redirect(request.url)
 
-            for file in files:
-                if file and (file.filename.endswith('.csv') or file.filename.endswith('.xlsx')):
-                    try:
-                        # Read the file
-                        if file.filename.endswith('.csv'):
-                            data = pd.read_csv(file)
-                        else:
-                            data = pd.read_excel(file)
+                # Choose collection based on type
+                collection = mis_collection if collection_type == 'mis' else users_collection
+                
+                # Verify collection exists
+                if collection.name not in db.list_collection_names():
+                    db.create_collection(collection.name)
+                    print(f"Created collection: {collection.name}")
 
-                        data = data.astype(str)
-
-                        # Apply lender-specific column selection, renaming, and filter condition
-                        if lender_name == "Cashe":
-                            data = data[['mobile_no', 'loan_transferred_date', 'loan_amount']]
-                            data = data.rename(columns={
-                                'mobile_no': 'phone',
-                                'loan_transferred_date': 'disbursaldate',
-                                'loan_amount': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "Ramfin":
-                            data = data[['mobile', 'disbursalDate', 'disbursalAmount']]
-                            data = data.rename(columns={
-                                'mobile': 'phone',
-                                'disbursalDate': 'disbursaldate',
-                                'disbursalAmount': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "Fibe":
-                            data = data[['mobile_number', 'first_disb_loan_date', 'first_disb_loan_amt']]
-                            data = data.rename(columns={
-                                'mobile_number': 'phone',
-                                'first_disb_loan_date': 'disbursaldate',
-                                'first_disb_loan_amt': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "SmartCoin":
-                            data = data[['phone_number', 'loan_disbursed_date', 'loan_amount']]
-                            data = data.rename(columns={
-                                'phone_number': 'phone',
-                                'loan_disbursed_date': 'disbursaldate',
-                                'loan_amount': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "MV":
-                            data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
-                            data = data.rename(columns={
-                                'phone_number': 'phone',
-                                'disbursal_date': 'disbursaldate',
-                                'disbursed_amt': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "Mpokket":
-                            data = data[['mobile_number', 'loan_disbursed_timestamp_ist', 'Loan_amount', 'profession']]
-                            data = data.rename(columns={
-                                'mobile_number': 'phone',
-                                'loan_disbursed_timestamp_ist': 'disbursaldate',
-                                'Loan_amount': 'disbursedamount',
-                                'profession': 'emp'
-                            })
-
-                        elif lender_name == "MoneyView":
-                            data = data[(data['current_status'] == "11. Disbursed")][
-                                ['phone_number', 'disbursed_amt', 'disbursal_date', 'current_status', 'employment_type']
-                            ]
-                            data = data.rename(columns={
-                                'phone_number': 'phone',
-                                'disbursed_amt': 'disbursedamount', 
-                                'disbursal_date': 'disbursaldate', 
-                                'current_status': 'status', 
-                                'employment_type': 'emp' 
-                            })
-
-                            data = data[data['disbursedamount'].astype(float) > 1]
-                        elif lender_name == "MVCancel":
-                            data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
-                            data = data.rename(columns={
-                                'phone_number': 'phone',
-                                'disbursal_date': 'disbursaldate',
-                                'disbursed_amt': 'disbursedamount'
-                            })
-                            data = data[data['disbursedamount'].astype(float) > 1]
-
-                        # Add common columns
-                        data['Lender'] = lender_name
-                        data['createdAt'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        
-                        # Convert data to dictionary format for MongoDB insertion
-                        data_dict = data.to_dict(orient='records')
-
-                        # Insert data into MongoDB based on collection type
-                        if collection_type == 'users':
-                            users_collection.insert_many(data_dict)
-
-                            for record in data_dict:
-                            # Convert 'disbursaldate' to 'dd-mm-yyyy' format if it exists
-                             if 'disbursaldate' in record and record['disbursaldate']:
-                                try:
-                                    date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
-                                    record['disbursaldate'] = date_obj.strftime('%d-%m-%Y')
-                                except ValueError:
-                                    flash(f"Invalid date format in disbursaldate for {record['phone']}")
-                                    continue  # Skip this record if date format is invalid
-
-                            # Check if the document already exists
-                            existing_doc = users_collection.find_one({'phone': record['phone']})
-                            if existing_doc:
-                                # Detect changes
-                                fields_to_update = {k: v for k, v in record.items() if existing_doc.get(k) != v}
-
-                                if fields_to_update:
-                                    # Only update 'updatedAt' if there's a change
-                                    fields_to_update['updatedAt'] = datetime.now()
-                                    users_collection.update_one(
-                                        {'phone': record['phone']},
-                                        {'$set': fields_to_update}
-                                    )
+                for file in files:
+                    if file and (file.filename.endswith('.csv') or file.filename.endswith('.xlsx')):
+                        try:
+                            # Read the file
+                            if file.filename.endswith('.csv'):
+                                data = pd.read_csv(file)
                             else:
-                                # Insert new document with 'updatedAt'
-                                record['updatedAt'] = datetime.now()
-                                users_collection.insert_one(record)
+                                data = pd.read_excel(file)
 
-                            flash(f'User data for {lender_name} uploaded successfully for file {file.filename}.')
-                        elif collection_type == 'mis':
-                            mis_collection.insert_many(data_dict)
-                            flash(f'MIS data for {lender_name} uploaded successfully for file {file.filename}.')
-                        else:
-                            flash(f'Invalid collection type selected for file {file.filename}.')
-                    except Exception as e:
-                        flash(f'Error processing file {file.filename}: {e}')
-                        print(f'Error processing file {file.filename}: {e}')
-                else:
-                    flash(f'Only CSV or Excel files are allowed. Skipping file {file.filename}.')
+                            data = data.astype(str)
 
-            return redirect(url_for('data_upload'))
+                            # Apply lender-specific column selection, renaming, and filter condition
+                            if lender_name == "Cashe":
+                                data = data[['mobile_no', 'loan_transferred_date', 'loan_amount']]
+                                data = data.rename(columns={
+                                    'mobile_no': 'phone',
+                                    'loan_transferred_date': 'disbursaldate',
+                                    'loan_amount': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "Ramfin":
+                                data = data[['mobile', 'disbursalDate', 'disbursalAmount']]
+                                data = data.rename(columns={
+                                    'mobile': 'phone',
+                                    'disbursalDate': 'disbursaldate',
+                                    'disbursalAmount': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "Fibe":
+                                data = data[['mobile_number', 'first_disb_loan_date', 'first_disb_loan_amt']]
+                                data = data.rename(columns={
+                                    'mobile_number': 'phone',
+                                    'first_disb_loan_date': 'disbursaldate',
+                                    'first_disb_loan_amt': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "SmartCoin":
+                                data = data[['phone_number', 'loan_disbursed_date', 'loan_amount']]
+                                data = data.rename(columns={
+                                    'phone_number': 'phone',
+                                    'loan_disbursed_date': 'disbursaldate',
+                                    'loan_amount': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "MV":
+                                data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
+                                data = data.rename(columns={
+                                    'phone_number': 'phone',
+                                    'disbursal_date': 'disbursaldate',
+                                    'disbursed_amt': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "Mpokket":
+                                data = data[['mobile_number', 'loan_disbursed_timestamp_ist', 'Loan_amount', 'profession']]
+                                data = data.rename(columns={
+                                    'mobile_number': 'phone',
+                                    'loan_disbursed_timestamp_ist': 'disbursaldate',
+                                    'Loan_amount': 'disbursedamount',
+                                    'profession': 'emp'
+                                })
+
+                            elif lender_name == "MoneyView":
+                                data = data[(data['current_status'] == "11. Disbursed")][
+                                    ['phone_number', 'disbursed_amt', 'disbursal_date', 'current_status', 'employment_type']
+                                ]
+                                data = data.rename(columns={
+                                    'phone_number': 'phone',
+                                    'disbursed_amt': 'disbursedamount', 
+                                    'disbursal_date': 'disbursaldate', 
+                                    'current_status': 'status', 
+                                    'employment_type': 'emp' 
+                                })
+
+                                data = data[data['disbursedamount'].astype(float) > 1]
+                            elif lender_name == "MVCancel":
+                                data = data[['phone_number', 'disbursal_date', 'disbursed_amt']]
+                                data = data.rename(columns={
+                                    'phone_number': 'phone',
+                                    'disbursal_date': 'disbursaldate',
+                                    'disbursed_amt': 'disbursedamount'
+                                })
+                                data = data[data['disbursedamount'].astype(float) > 1]
+
+                            # Add common columns
+                            data['Lender'] = lender_name
+                            data['createdAt'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            
+                            # Convert data to dictionary format for MongoDB insertion
+                            data_dict = data.to_dict(orient='records')
+
+                            # Add debug logging
+                            print(f"Processing {len(data_dict)} records for {lender_name}")
+                            
+                            for record in data_dict:
+                                try:
+                                    if 'disbursaldate' in record and record['disbursaldate']:
+                                        formatted_date = format_date(record['disbursaldate'])
+                                        if formatted_date:
+                                            record['disbursaldate'] = formatted_date
+
+                                    record['updatedAt'] = datetime.now()
+                                    
+                                    # Debug print
+                                    print(f"Saving record: {record['phone']}")
+
+                                    existing_doc = collection.find_one({'phone': record['phone']})
+                                    
+                                    if existing_doc:
+                                        result = collection.update_one(
+                                            {'phone': record['phone']},
+                                            {'$set': record}
+                                        )
+                                        print(f"Updated record: {result.modified_count}")
+                                    else:
+                                        result = collection.insert_one(record)
+                                        print(f"Inserted record: {result.inserted_id}")
+
+                                except Exception as record_error:
+                                    print(f"Error processing record: {str(record_error)}")
+                                    continue
+
+                            flash(f'Data for {lender_name} uploaded successfully to {collection_type} collection.')
+                        except Exception as e:
+                            flash(f'Error processing file {file.filename}: {str(e)}')
+                            print(f'Error processing file {file.filename}: {str(e)}')
+                    else:
+                        flash(f'Only CSV or Excel files are allowed. Skipping file {file.filename}.')
+
+                return redirect(url_for('data_upload'))
+            except Exception as route_error:
+                print(f"Route error: {str(route_error)}")
+                flash(f'An error occurred: {str(route_error)}')
+                return redirect(url_for('data_upload'))
 
         return render_template('data_upload.html', username=session['username'])
     else:
@@ -277,10 +292,20 @@ def home():
 def dashboard():
     if 'username' in session and session['access_level'] == 'full':
         # Fetch data from the database
-        data = list(mis_collection.find({}, {'_id': 0, 'phone': 1, 'disbursedamount': 1, 'disbursaldate': 1, 'status': 1, 'Lender': 1, 'createdAt': 1}))
+        data = list(mis_collection.find({}, {
+            '_id': 0, 
+            'phone': 1, 
+            'disbursedamount': 1, 
+            'disbursaldate': 1, 
+            'status': 1, 
+            'Lender': 1, 
+            'createdAt': 1,
+            'partner': 1  # Make sure this field is included
+        }))
 
-        # Format disbursaldate and createdAt
+        # Format the data and add default partner value if missing
         for record in data:
+            # Format dates as before
             if 'disbursaldate' in record and record['disbursaldate']:
                 try:
                     date_obj = datetime.strptime(record['disbursaldate'], '%Y-%m-%d')
@@ -293,11 +318,15 @@ def dashboard():
                     record['createdAt'] = date_obj.strftime('%d-%m-%y')
                 except ValueError:
                     pass
+            
+            # Set a default value for partner if it's missing or None
+            if 'partner' not in record or record['partner'] is None:
+                record['partner'] = ''  # Empty string instead of 'Unknown'
 
         # Filter out records with missing or blank 'disbursedamount'
         data = [record for record in data if record.get('disbursedamount') not in [None, "", " "]]
 
-        # Calculate total disbursed amount and total count of records
+        # Calculate totals
         total_disbursed = sum(float(record['disbursedamount']) for record in data)
         total_count = len(data)
 
@@ -625,22 +654,95 @@ def get_content(page):
 @app.route('/get_partners', methods=['POST'])
 def get_partners():
     try:
-        # Get the phone numbers from the DataTable
         data = request.get_json()
         phones = data.get('phones', [])
 
-        # Make API call to get partners
+        if not phones:
+            return jsonify({"error": "No phone numbers provided"}), 400
+
         api_url = "https://credmantra.com/api/v1/crm/getPartners"
-        response = requests.post(api_url, json={"phones": phones})
+        headers = {'Content-Type': 'application/json'}
+        
+        response = requests.post(
+            api_url, 
+            json={"phones": phones},
+            headers=headers,
+            timeout=30
+        )
         
         if response.status_code == 200:
-            return jsonify(response.json())
+            partner_list = response.json()
+            partner_data = {}
+            
+            # Convert list to dictionary format
+            if isinstance(partner_list, list):
+                for item in partner_list:
+                    if isinstance(item, dict) and 'phone' in item and 'partner' in item:
+                        partner_data[item['phone']] = {
+                            'partner': item['partner']
+                        }
+                        # Update MongoDB
+                        mis_collection.update_one(
+                            {"phone": item['phone']},
+                            {"$set": {
+                                "partner": item['partner'],
+                                "updatedAt": datetime.now()
+                            }}
+                        )
+            
+            return jsonify({
+                "success": True,
+                "data": partner_data
+            })
         else:
-            return jsonify({"error": "Failed to fetch partner data"}), 400
+            return jsonify({"error": f"API request failed: {response.text}"}), response.status_code
+
+    except Exception as e:
+        print(f"Error in get_partners: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/update-partners', methods=['POST'])
+def update_partners():
+    try:
+        # Get partner data from request
+        data = request.get_json()
+        partner_data = data.get('partnerData', {})
+
+        if not partner_data:
+            return jsonify({"error": "No partner data provided"}), 400
+
+        # Update records in MongoDB
+        updates = {}
+        for phone, info in partner_data.items():
+            # Find existing document
+            existing = mis_collection.find_one({"phone": phone})
+            
+            if existing:
+                old_partner = existing.get('partner', None)
+                new_partner = info.get('partner')
+                
+                # Only update if partner is different
+                if old_partner != new_partner:
+                    mis_collection.update_one(
+                        {"phone": phone},
+                        {"$set": {
+                            "partner": new_partner,
+                            "updatedAt": datetime.now()
+                        }}
+                    )
+                    updates[phone] = {
+                        "old_partner": old_partner,
+                        "new_partner": new_partner
+                    }
+
+        return jsonify({
+            "message": "Partner information updated successfully",
+            "updatedCount": len(updates),
+            "updates": updates
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
 @app.route('/analytical')
 def analytical():
@@ -688,6 +790,72 @@ def analytical():
         monthly_data=monthly_data,
         amount_distribution=amount_distribution
     )
+
+# Add this new route to handle saving partner data to DB
+@app.route('/save_partners_to_db', methods=['POST'])
+def save_partners_to_db():
+    try:
+        # Get phones from all records in mis_collection
+        all_records = mis_collection.find({}, {'phone': 1, '_id': 0})
+        phones = [record['phone'] for record in all_records]
+
+        if not phones:
+            return jsonify({"error": "No phone numbers found"}), 400
+
+        # Call getPartners API
+        api_url = "https://credmantra.com/api/v1/crm/getPartners"
+        headers = {'Content-Type': 'application/json'}
+        
+        response = requests.post(
+            api_url, 
+            json={"phones": phones},
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            partner_list = response.json()
+            
+            # Create or get the getpartner collection
+            getpartner_collection = db['getpartner']
+            
+            # Clear existing data in getpartner collection
+            getpartner_collection.delete_many({})
+            
+            # Prepare documents for insertion
+            documents = []
+            for item in partner_list:
+                if isinstance(item, dict) and 'phone' in item and 'partner' in item:
+                    document = {
+                        'phone': item['phone'],
+                        'partner': item['partner'],
+                        'createdAt': datetime.now(),
+                        'updatedAt': datetime.now()
+                    }
+                    documents.append(document)
+            
+            # Insert documents in bulk if there are any
+            if documents:
+                getpartner_collection.insert_many(documents)
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Successfully saved {len(documents)} partner records to database",
+                    "count": len(documents)
+                })
+            else:
+                return jsonify({
+                    "error": "No valid partner data found to save"
+                }), 400
+                
+        else:
+            return jsonify({
+                "error": f"API request failed: {response.text}"
+            }), response.status_code
+
+    except Exception as e:
+        print(f"Error in save_partners_to_db: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
