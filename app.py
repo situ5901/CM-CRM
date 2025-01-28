@@ -3,7 +3,7 @@ import smtplib
 import pandas as pd
 from pymongo import MongoClient
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from markupsafe import Markup   
 from flask import jsonify
 import openpyxl
@@ -746,50 +746,266 @@ def update_partners():
 
 @app.route('/analytical')
 def analytical():
-    # Initialize default values
-    total_disbursed = 0
-    total_count = 0
-    avg_ticket = 0
-    top_lender = "N/A"
-    top_partner = "N/A"
-    
-    # Get username from session
-    username = session.get('username', 'Guest')
-    
-    # Sample data for charts (replace with your actual data)
-    monthly_data = [
-        {"_id": {"month": 1, "year": 2024}, "amount": 0, "count": 0},
-        {"_id": {"month": 2, "year": 2024}, "amount": 0, "count": 0}
-    ]
-    
-    amount_distribution = [
-        {"range": "0-5K", "count": 0},
-        {"range": "5K-25K", "count": 0},
-        {"range": "25K-50K", "count": 0},
-        {"range": "50K-100K", "count": 0},
-        {"range": "100K+", "count": 0}
-    ]
-    
-    # Sample filter options (replace with your actual data)
-    lenders = ["Lender 1", "Lender 2"]
-    partners = ["Partner 1", "Partner 2"]
-    statuses = ["Approved", "Pending", "Rejected"]
-    amount_ranges = ["0-5,000", "5,000-25,000", "25,000-50,000", "50,000-100,000", "100,000+"]
+    try:
+        # Monthly trends data
+        monthly_pipeline = [
+            {
+                "$match": {
+                    "disbursedamount": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$addFields": {
+                    "numeric_amount": {
+                        "$toDouble": "$disbursedamount"
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "month": {"$substr": ["$disbursaldate", 3, 2]},
+                        "year": {"$substr": ["$disbursaldate", 6, 4]}
+                    },
+                    "amount": {"$sum": "$numeric_amount"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
+        ]
+        
+        monthly_result = list(mis_collection.aggregate(monthly_pipeline))
+        
+        # Format monthly data
+        monthly_data = []
+        for item in monthly_result:
+            monthly_data.append({
+                "month": item["_id"]["month"],
+                "year": item["_id"]["year"],
+                "amount": float(item["amount"]),
+                "count": item["count"]
+            })
 
-    return render_template('analytical.html',
-        username=username,
-        total_disbursed=total_disbursed,
-        total_count=total_count,
-        avg_ticket=avg_ticket,
-        top_lender=top_lender,
-        top_partner=top_partner,
-        lenders=lenders,
-        partners=partners,
-        statuses=statuses,
-        amount_ranges=amount_ranges,
-        monthly_data=monthly_data,
-        amount_distribution=amount_distribution
-    )
+        # Calculate totals
+        total_pipeline = [
+            {
+                "$match": {
+                    "disbursedamount": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$addFields": {
+                    "numeric_amount": {"$toDouble": "$disbursedamount"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$numeric_amount"},
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        
+        total_result = list(mis_collection.aggregate(total_pipeline))
+        
+        # Convert to float/int before formatting
+        total_disbursed = float(total_result[0]['total']) if total_result else 0.0
+        total_count = int(total_result[0]['count']) if total_result else 0
+        
+        # Calculate average ticket size
+        avg_ticket = total_disbursed / total_count if total_count > 0 else 0.0
+
+        # Get top lender
+        top_lender_pipeline = [
+            {
+                "$match": {
+                    "Lender": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$Lender",
+                    "total": {"$sum": {"$toDouble": "$disbursedamount"}}
+                }
+            },
+            {"$sort": {"total": -1}},
+            {"$limit": 1}
+        ]
+        
+        top_lender_result = list(mis_collection.aggregate(top_lender_pipeline))
+        top_lender = top_lender_result[0]['_id'] if top_lender_result else "N/A"
+
+        # Get top partner
+        top_partner_pipeline = [
+            {
+                "$match": {
+                    "partner": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$partner",
+                    "total": {"$sum": {"$toDouble": "$disbursedamount"}}
+                }
+            },
+            {"$sort": {"total": -1}},
+            {"$limit": 1}
+        ]
+        
+        top_partner_result = list(mis_collection.aggregate(top_partner_pipeline))
+        top_partner = top_partner_result[0]['_id'] if top_partner_result else "N/A"
+
+        # Get filter options
+        lenders = sorted([l for l in mis_collection.distinct("Lender") if l])
+        partners = sorted([p for p in mis_collection.distinct("partner") if p])
+        statuses = sorted([s for s in mis_collection.distinct("status") if s])
+        amount_ranges = ['0-5,000', '5,000-25,000', '25,000-50,000', '50,000-1,00,000', '1,00,000+']
+
+        # Amount Distribution Data
+        amount_distribution_pipeline = [
+            {
+                "$match": {
+                    "disbursedamount": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$addFields": {
+                    "numeric_amount": {"$toDouble": "$disbursedamount"}
+                }
+            },
+            {
+                "$bucket": {
+                    "groupBy": "$numeric_amount",
+                    "boundaries": [0, 5000, 25000, 50000, 100000, float("inf")],
+                    "default": "Other",
+                    "output": {
+                        "count": {"$sum": 1},
+                        "total": {"$sum": "$numeric_amount"}
+                    }
+                }
+            }
+        ]
+        
+        amount_distribution = list(mis_collection.aggregate(amount_distribution_pipeline))
+        
+        # Add range labels
+        ranges = ['0-5K', '5K-25K', '25K-50K', '50K-100K', '100K+']
+        for i, bucket in enumerate(amount_distribution):
+            if i < len(ranges):
+                bucket['range'] = ranges[i]
+
+        # Approval Rate Data
+        approval_pipeline = [
+            {
+                "$match": {
+                    "status": {"$exists": True, "$ne": ""},
+                    "disbursaldate": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$disbursaldate",
+                    "total": {"$sum": 1},
+                    "approved": {
+                        "$sum": {
+                            "$cond": [
+                                {"$eq": ["$status", "approved"]},
+                                1,
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "date": "$_id",
+                    "rate": {
+                        "$multiply": [
+                            {"$divide": ["$approved", "$total"]},
+                            100
+                        ]
+                    }
+                }
+            },
+            {"$sort": {"date": 1}}
+        ]
+        
+        approval_data = list(mis_collection.aggregate(approval_pipeline))
+
+        # Processing Time Data
+        processing_pipeline = [
+            {
+                "$match": {
+                    "disbursaldate": {"$exists": True, "$ne": ""},
+                    "createdAt": {"$exists": True, "$ne": ""}
+                }
+            },
+            {
+                "$addFields": {
+                    "processing_hours": {
+                        "$divide": [
+                            {"$subtract": [
+                                {"$dateFromString": {
+                                    "dateString": "$disbursaldate",
+                                    "format": "%d-%m-%Y"
+                                }},
+                                {"$dateFromString": {
+                                    "dateString": "$createdAt",
+                                    "format": "%Y-%m-%d %H:%M:%S"
+                                }}
+                            ]},
+                            3600000  # Convert milliseconds to hours
+                        ]
+                    }
+                }
+            },
+            {
+                "$bucket": {
+                    "groupBy": "$processing_hours",
+                    "boundaries": [0, 24, 48, 72, 96, 120],  # Processing time in hours
+                    "default": "120+",
+                    "output": {
+                        "count": {"$sum": 1}
+                    }
+                }
+            }
+        ]
+        
+        processing_data = list(mis_collection.aggregate(processing_pipeline))
+
+        # Add time range labels
+        time_ranges = ['0-24h', '24-48h', '48-72h', '72-96h', '96-120h', '120h+']
+        processing_data_formatted = []
+        for i, data in enumerate(processing_data):
+            label = time_ranges[i] if i < len(time_ranges) else '120h+'
+            processing_data_formatted.append({
+                'range': label,
+                'count': data['count']
+            })
+
+        return render_template(
+            'analytical.html',
+            monthly_data=monthly_data,
+            amount_distribution=amount_distribution,
+            approval_data=approval_data,
+            processing_data=processing_data_formatted,
+            total_disbursed=total_disbursed,
+            total_count=total_count,
+            avg_ticket=avg_ticket,
+            top_lender=top_lender,
+            top_partner=top_partner,
+            lenders=lenders,
+            partners=partners,
+            statuses=statuses,
+            amount_ranges=amount_ranges,
+            username=session.get('username', 'Guest')
+        )
+
+    except Exception as e:
+        print(f"Error in analytical route: {str(e)}")
+        return f"An error occurred: {str(e)}", 500
 
 # Add this new route to handle saving partner data to DB
 @app.route('/save_partners_to_db', methods=['POST'])
@@ -857,6 +1073,125 @@ def save_partners_to_db():
         print(f"Error in save_partners_to_db: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/apply_filters', methods=['POST'])
+def apply_filters():
+    try:
+        filters = request.get_json()
+        
+        # Build MongoDB query based on filters
+        query = {
+            "disbursedamount": {"$exists": True, "$ne": ""}
+        }
+
+        # Date Range Filter
+        if filters.get('dateRange'):
+            date_range = filters['dateRange']
+            today = datetime.now()
+            if date_range == 'Last 30 Days':
+                start_date = (today - timedelta(days=30)).strftime('%d-%m-%Y')
+                query['disbursaldate'] = {'$gte': start_date}
+            elif date_range == 'Last 90 Days':
+                start_date = (today - timedelta(days=90)).strftime('%d-%m-%Y')
+                query['disbursaldate'] = {'$gte': start_date}
+            # Custom range can be added here
+
+        # Lender Filter
+        if filters.get('lender') and filters['lender'] != 'All Lenders':
+            query['Lender'] = filters['lender']
+
+        # Partner Filter
+        if filters.get('partner') and filters['partner'] != 'All Partners':
+            query['partner'] = filters['partner']
+
+        # Status Filter
+        if filters.get('status') and filters['status'] != 'All Status':
+            query['status'] = filters['status']
+
+        # Amount Range Filter
+        if filters.get('amountRange') and filters['amountRange'] != 'All Amounts':
+            range_limits = {
+                '0-5,000': [0, 5000],
+                '5,000-25,000': [5000, 25000],
+                '25,000-50,000': [25000, 50000],
+                '50,000-1,00,000': [50000, 100000],
+                '1,00,000+': [100000, float('inf')]
+            }
+            
+            if filters['amountRange'] in range_limits:
+                min_val, max_val = range_limits[filters['amountRange']]
+                query['$expr'] = {
+                    '$and': [
+                        {'$gte': [{'$toDouble': '$disbursedamount'}, min_val]},
+                        {'$lt': [{'$toDouble': '$disbursedamount'}, max_val]}
+                    ]
+                }
+
+        # Monthly trends pipeline with filters
+        monthly_pipeline = [
+            {'$match': query},
+            {
+                '$addFields': {
+                    'numeric_amount': {'$toDouble': '$disbursedamount'}
+                }
+            },
+            {
+                '$group': {
+                    '_id': {
+                        'month': {'$substr': ['$disbursaldate', 3, 2]},
+                        'year': {'$substr': ['$disbursaldate', 6, 4]}
+                    },
+                    'amount': {'$sum': '$numeric_amount'},
+                    'count': {'$sum': 1}
+                }
+            },
+            {'$sort': {'_id.year': 1, '_id.month': 1}}
+        ]
+
+        monthly_result = list(mis_collection.aggregate(monthly_pipeline))
+        
+        # Format monthly data
+        monthly_data = []
+        for item in monthly_result:
+            monthly_data.append({
+                'month': item['_id']['month'],
+                'year': item['_id']['year'],
+                'amount': float(item['amount']),
+                'count': item['count']
+            })
+
+        # Calculate totals for filtered data
+        total_pipeline = [
+            {'$match': query},
+            {
+                '$group': {
+                    '_id': None,
+                    'total': {'$sum': {'$toDouble': '$disbursedamount'}},
+                    'count': {'$sum': 1}
+                }
+            }
+        ]
+        
+        total_result = list(mis_collection.aggregate(total_pipeline))
+        total_disbursed = float(total_result[0]['total']) if total_result else 0.0
+        total_count = int(total_result[0]['count']) if total_result else 0
+        avg_ticket = total_disbursed / total_count if total_count > 0 else 0.0
+
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'monthly_data': monthly_data,
+                'total_disbursed': total_disbursed,
+                'total_count': total_count,
+                'avg_ticket': avg_ticket
+            }
+        })
+
+    except Exception as e:
+        print(f"Error in apply_filters: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

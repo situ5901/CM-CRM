@@ -1,4 +1,3 @@
-
 {% set active_page = 'analytical' %}
 
 {% block content %}
@@ -79,21 +78,21 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">TOTAL DISBURSALS</div>
-                <div class="stat-amount">₹{{ "{:,.2f}".format(total_disbursed) }}</div>
+                <div class="stat-amount">₹{{ "%.2f"|format(total_disbursed|float) }}</div>
                 <div class="stat-icon">
                     <i class="fas fa-rupee-sign"></i>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">TOTAL COUNT</div>
-                <div class="stat-amount">{{ "{:,}".format(total_count) }}</div>
+                <div class="stat-amount">{{ total_count }}</div>
                 <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">AVG TICKET SIZE</div>
-                <div class="stat-amount">₹{{ "{:,.2f}".format(avg_ticket) }}</div>
+                <div class="stat-amount">₹{{ "%.2f"|format(avg_ticket|float) }}</div>
                 <div class="stat-icon">
                     <i class="fas fa-ticket-alt"></i>
                 </div>
@@ -670,20 +669,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Monthly Trends Chart
-const monthlyData = {{ monthly_data|tojson }};
-const monthlyChart = new Chart(document.getElementById('monthlyTrendsChart'), {
+const monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), {
     type: 'line',
     data: {
-        labels: monthlyData.map(d => `${d._id.month}/${d._id.year}`),
+        labels: {{ monthly_data|tojson|safe }}.map(d => `${d.month}/${d.year}`),
         datasets: [{
-            label: 'Amount',    
-            data: monthlyData.map(d => d.amount),
+            label: 'Amount (₹)',    
+            data: {{ monthly_data|tojson|safe }}.map(d => parseFloat(d.amount)),
             borderColor: '#36a2eb',
             backgroundColor: 'rgba(54, 162, 235, 0.1)',
-            fill: true
+            fill: true,
+            yAxisID: 'amount'
         }, {
             label: 'Count',
-            data: monthlyData.map(d => d.count),
+            data: {{ monthly_data|tojson|safe }}.map(d => parseInt(d.count)),
             borderColor: '#ff6384',
             backgroundColor: 'rgba(255, 99, 132, 0.1)',
             fill: true,
@@ -692,16 +691,33 @@ const monthlyChart = new Chart(document.getElementById('monthlyTrendsChart'), {
     },
     options: {
         responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
         scales: {
-            y: {
-                beginAtZero: true,
+            amount: {
                 type: 'linear',
-                position: 'left'
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Amount (₹)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return '₹' + value.toLocaleString('en-IN');
+                    }
+                }
             },
             count: {
-                beginAtZero: true,
                 type: 'linear',
+                display: true,
                 position: 'right',
+                title: {
+                    display: true,
+                    text: 'Number of Loans'
+                },
                 grid: {
                     drawOnChartArea: false
                 }
@@ -711,36 +727,16 @@ const monthlyChart = new Chart(document.getElementById('monthlyTrendsChart'), {
 });
 
 // Amount Distribution Chart
-const distributionData = {{ amount_distribution|tojson }};
-new Chart(document.getElementById('amountDistributionChart'), {
+const amountDistributionChart = new Chart(document.getElementById('amountDistributionChart'), {
     type: 'bar',
     data: {
-        labels: ['0-5K', '5K-25K', '25K-50K', '50K-100K', '100K+'],
+        labels: {{ amount_distribution|tojson|safe }}.map(d => d.range),
         datasets: [{
             label: 'Number of Loans',
-            data: distributionData.map(d => d.count),
-            backgroundColor: 'rgba(54, 162, 235, 0.5)'
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
-
-// Placeholder charts for Approval Rate and Processing Time
-new Chart(document.getElementById('approvalRateChart'), {
-    type: 'line',
-    data: {
-        labels: ['Sep', 'Oct', 'Nov', 'Dec'],
-        datasets: [{
-            label: 'Approval Rate',
-            data: [85, 88, 82, 90],
-            borderColor: '#4bc0c0'
+            data: {{ amount_distribution|tojson|safe }}.map(d => d.count),
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
         }]
     },
     options: {
@@ -748,44 +744,139 @@ new Chart(document.getElementById('approvalRateChart'), {
         scales: {
             y: {
                 beginAtZero: true,
-                max: 100
+                title: {
+                    display: true,
+                    text: 'Number of Loans'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Loan Amount Range'
+                }
             }
         }
     }
 });
 
-new Chart(document.getElementById('processingTimeChart'), {
-    type: 'bar',
+// Approval Rate Chart
+const approvalRateChart = new Chart(document.getElementById('approvalRateChart'), {
+    type: 'line',
     data: {
-        labels: ['<1hr', '1-2hr', '2-4hr', '4-8hr', '>8hr'],
+        labels: {{ approval_data|tojson|safe }}.map(d => d.date),
         datasets: [{
-            label: 'Number of Applications',
-            data: [30, 45, 25, 15, 5],
-            backgroundColor: 'rgba(75, 192, 192, 0.5)'
+            label: 'Approval Rate (%)',
+            data: {{ approval_data|tojson|safe }}.map(d => d.rate),
+            borderColor: '#4bc0c0',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            fill: true
         }]
     },
     options: {
         responsive: true,
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Approval Rate (%)'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
             }
         }
     }
 });
 
+// Processing Time Chart
+const processingTimeChart = new Chart(document.getElementById('processingTimeChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ processing_data|tojson|safe }}.map(d => d.range),
+        datasets: [{
+            label: 'Number of Applications',
+            data: {{ processing_data|tojson|safe }}.map(d => d.count),
+            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Applications'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Processing Time'
+                }
+            }
+        }
+    }
+});
+
+// Stats Cards
+document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
+    '₹' + parseFloat({{ total_disbursed|tojson|safe }}).toLocaleString('en-IN');
+
+document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
+    parseInt({{ total_count|tojson|safe }}).toLocaleString('en-IN');
+
+document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
+    '₹' + parseFloat({{ avg_ticket|tojson|safe }}).toLocaleString('en-IN');
+
+document.querySelector('.stat-card:nth-child(4) .stat-amount').textContent = 
+    {{ top_lender|tojson|safe }};
+
+document.querySelector('.stat-card:nth-child(5) .stat-amount').textContent = 
+    {{ top_partner|tojson|safe }};
+
+// Filter Dropdowns
+const lenderSelect = document.getElementById('lender');
+const partnerSelect = document.getElementById('partner');
+const statusSelect = document.getElementById('status');
+
+// Populate lender dropdown
+{{ lenders|tojson|safe }}.forEach(lender => {
+    const option = new Option(lender, lender);
+    lenderSelect.add(option);
+});
+
+// Populate partner dropdown
+{{ partners|tojson|safe }}.forEach(partner => {
+    const option = new Option(partner, partner);
+    partnerSelect.add(option);
+});
+
+// Populate status dropdown
+{{ statuses|tojson|safe }}.forEach(status => {
+    const option = new Option(status, status);
+    statusSelect.add(option);
+});
+
+// Apply Filters Button Handler
 document.getElementById('applyFilters').addEventListener('click', function() {
     // Show loading state
-    const button = this;
-    button.disabled = true;
-    button.innerHTML = 'Applying...';
-
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    
     const filters = {
-        date_range: document.getElementById('dateRange').value,
+        dateRange: document.getElementById('dateRange').value,
         lender: document.getElementById('lender').value,
         partner: document.getElementById('partner').value,
         status: document.getElementById('status').value,
-        amount_range: document.getElementById('amountRange').value
+        amountRange: document.getElementById('amountRange').value
     };
 
     fetch('/apply_filters', {
@@ -798,8 +889,45 @@ document.getElementById('applyFilters').addEventListener('click', function() {
     .then(response => response.json())
     .then(result => {
         if (result.status === 'success') {
-            // Update charts
-            updateCharts(result.data);
+            const data = result.data;
+            
+            // Update Monthly Trends Chart
+            monthlyTrendsChart.data.labels = data.monthly_data.map(d => `${d.month}/${d.year}`);
+            monthlyTrendsChart.data.datasets[0].data = data.monthly_data.map(d => d.amount);
+            monthlyTrendsChart.data.datasets[1].data = data.monthly_data.map(d => d.count);
+            monthlyTrendsChart.update();
+
+            // Update Amount Distribution Chart
+            amountDistributionChart.data.labels = data.amount_distribution.map(d => d.range);
+            amountDistributionChart.data.datasets[0].data = data.amount_distribution.map(d => d.count);
+            amountDistributionChart.update();
+
+            // Update Approval Rate Chart
+            approvalRateChart.data.labels = data.approval_data.map(d => d.date);
+            approvalRateChart.data.datasets[0].data = data.approval_data.map(d => d.rate);
+            approvalRateChart.update();
+
+            // Update Processing Time Chart
+            processingTimeChart.data.labels = data.processing_data.map(d => d.range);
+            processingTimeChart.data.datasets[0].data = data.processing_data.map(d => d.count);
+            processingTimeChart.update();
+
+            // Update Stats Cards
+            document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
+                '₹' + data.total_disbursed.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            
+            document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
+                data.total_count.toLocaleString('en-IN');
+            
+            document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
+                '₹' + data.avg_ticket.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
             showNotification('Filters applied successfully', 'success');
         } else {
             showNotification(result.message || 'Error applying filters', 'error');
@@ -811,34 +939,17 @@ document.getElementById('applyFilters').addEventListener('click', function() {
     })
     .finally(() => {
         // Reset button state
-        button.disabled = false;
-        button.innerHTML = 'Apply Filters';
+        this.disabled = false;
+        this.textContent = 'Apply Filters';
     });
 });
 
-function updateCharts(data) {
-    // Update Monthly Trends Chart
-    monthlyChart.data.labels = data.labels;
-    monthlyChart.data.datasets[0].data = data.monthly_amounts;
-    monthlyChart.data.datasets[1].data = data.monthly_counts;
-    monthlyChart.update();
-
-    // Show success notification
-    showNotification('Charts updated successfully', 'success');
-}
-
 function showNotification(message, type) {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
-
-    // Create new notification
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     document.body.appendChild(notification);
     
-    // Remove after 3 seconds
     setTimeout(() => {
         notification.remove();
     }, 3000);
