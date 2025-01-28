@@ -80,7 +80,7 @@ def main():
                             #### Print document before update
                             # doc_before = mis_collection.find_one({"phone": item["phone"]})
                             # print(f"\nBefore update: {doc_before}")
-                            result = mis_collection.update_one(
+                            result = mis_collection.update_many(  # Changed to update_many
                                 {"phone": item["phone"]},
                                 {
                                     "$set": {
@@ -93,11 +93,11 @@ def main():
 
                             # print(item["partner"])
                             if result.modified_count > 0:
-                                print(f"Updated partner for phone: {item['phone']}")
+                                print(f"Updated {result.modified_count} documents for phone: {item['phone']}")
                             else:
                                 print(f"No update needed for phone: {item['phone']}")
                         except Exception as e:
-                            print(f"Error updating document for phone {item['phone']}: {str(e)}")
+                            print(f"Error updating documents for phone {item['phone']}: {str(e)}")
                             failed += 1
             else:
                 failed += len(current_batch)
@@ -110,7 +110,6 @@ def main():
             
             # Add delay to avoid overwhelming the API
             time.sleep(1)
-    
     print(f"\nCompleted processing {processed} documents ({failed} failed)")
 
 if __name__ == "__main__":
