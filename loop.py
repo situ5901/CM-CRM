@@ -33,7 +33,15 @@ def get_partners_for_phones(phones):
 
 def main():
     # Find documents without partner key
-    query = {"partner": {"$exists": False}}
+    query = {
+        "$or": [
+            {"partner": {"$exists": False}},
+            {"partner": None},
+            {"partner": ""},
+            {"partner": "unknown"},
+            {"partner": "Unknown"}
+        ]
+    }
     total_docs = mis_collection.count_documents(query)
     
     if total_docs == 0:
@@ -77,7 +85,8 @@ def main():
                                 {
                                     "$set": {
                                         "partner": item["partner"],
-                                        "updatedAt": datetime.now()
+                                        "updatedAt": datetime.now(),
+                                        "ref": {"name": "partnerloop", "time": datetime.now()}
                                     }
                                 }
                             )
