@@ -69,7 +69,7 @@ def main():
                 for item in partner_data:
                     if isinstance(item, dict) and "phone" in item and "partner" in item:
                         try:
-                            ### Print document before update
+                            #### Print document before update
                             # doc_before = mis_collection.find_one({"phone": item["phone"]})
                             # print(f"\nBefore update: {doc_before}")
                             result = mis_collection.update_one(
