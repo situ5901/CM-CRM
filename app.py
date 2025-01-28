@@ -1093,7 +1093,6 @@ def apply_filters():
             elif date_range == 'Last 90 Days':
                 start_date = (today - timedelta(days=90)).strftime('%d-%m-%Y')
                 query['disbursaldate'] = {'$gte': start_date}
-            # Custom range can be added here
 
         # Lender Filter
         if filters.get('lender') and filters['lender'] != 'All Lenders':
@@ -1126,7 +1125,7 @@ def apply_filters():
                     ]
                 }
 
-        # Monthly trends pipeline with filters
+        # Monthly trends pipeline
         monthly_pipeline = [
             {'$match': query},
             {
@@ -1147,20 +1146,123 @@ def apply_filters():
             {'$sort': {'_id.year': 1, '_id.month': 1}}
         ]
 
+        # Amount Distribution pipeline
+        amount_distribution_pipeline = [
+            {'$match': query},
+            {
+                '$addFields': {
+                    'numeric_amount': {'$toDouble': '$disbursedamount'}
+                }
+            },
+            {
+                '$bucket': {
+                    'groupBy': '$numeric_amount',
+                    'boundaries': [0, 5000, 25000, 50000, 100000, float('inf')],
+                    'default': 'Other',
+                    'output': {
+                        'count': {'$sum': 1},
+                        'total': {'$sum': '$numeric_amount'}
+                    }
+                }
+            }
+        ]
+
+        # Approval Rate pipeline
+        approval_pipeline = [
+            {'$match': query},
+            {
+                '$group': {
+                    '_id': '$disbursaldate',
+                    'total': {'$sum': 1},
+                    'approved': {
+                        '$sum': {
+                            '$cond': [{'$eq': ['$status', 'approved']}, 1, 0]
+                        }
+                    }
+                }
+            },
+            {
+                '$project': {
+                    'date': '$_id',
+                    'rate': {
+                        '$multiply': [
+                            {'$divide': ['$approved', '$total']},
+                            100
+                        ]
+                    }
+                }
+            },
+            {'$sort': {'date': 1}}
+        ]
+
+        # Processing Time pipeline
+        processing_pipeline = [
+            {'$match': query},
+            {
+                '$addFields': {
+                    'processing_hours': {
+                        '$divide': [
+                            {'$subtract': [
+                                {'$dateFromString': {
+                                    'dateString': '$disbursaldate',
+                                    'format': '%d-%m-%Y'
+                                }},
+                                {'$dateFromString': {
+                                    'dateString': '$createdAt',
+                                    'format': '%Y-%m-%d %H:%M:%S'
+                                }}
+                            ]},
+                            3600000
+                        ]
+                    }
+                }
+            },
+            {
+                '$bucket': {
+                    'groupBy': '$processing_hours',
+                    'boundaries': [0, 24, 48, 72, 96, 120],
+                    'default': '120+',
+                    'output': {
+                        'count': {'$sum': 1}
+                    }
+                }
+            }
+        ]
+
+        # Execute all pipelines
         monthly_result = list(mis_collection.aggregate(monthly_pipeline))
-        
+        amount_distribution = list(mis_collection.aggregate(amount_distribution_pipeline))
+        approval_data = list(mis_collection.aggregate(approval_pipeline))
+        processing_data = list(mis_collection.aggregate(processing_pipeline))
+
         # Format monthly data
-        monthly_data = []
-        for item in monthly_result:
-            monthly_data.append({
+        monthly_data = [
+            {
                 'month': item['_id']['month'],
                 'year': item['_id']['year'],
                 'amount': float(item['amount']),
                 'count': item['count']
+            } for item in monthly_result
+        ]
+
+        # Format amount distribution data
+        ranges = ['0-5K', '5K-25K', '25K-50K', '50K-100K', '100K+']
+        for i, bucket in enumerate(amount_distribution):
+            if i < len(ranges):
+                bucket['range'] = ranges[i]
+
+        # Format processing time data
+        time_ranges = ['0-24h', '24-48h', '48-72h', '72-96h', '96-120h', '120h+']
+        processing_data_formatted = []
+        for i, data in enumerate(processing_data):
+            label = time_ranges[i] if i < len(time_ranges) else '120h+'
+            processing_data_formatted.append({
+                'range': label,
+                'count': data['count']
             })
 
-        # Calculate totals for filtered data
-        total_pipeline = [
+        # Calculate totals
+        total_result = list(mis_collection.aggregate([
             {'$match': query},
             {
                 '$group': {
@@ -1169,9 +1271,8 @@ def apply_filters():
                     'count': {'$sum': 1}
                 }
             }
-        ]
-        
-        total_result = list(mis_collection.aggregate(total_pipeline))
+        ]))
+
         total_disbursed = float(total_result[0]['total']) if total_result else 0.0
         total_count = int(total_result[0]['count']) if total_result else 0
         avg_ticket = total_disbursed / total_count if total_count > 0 else 0.0
@@ -1180,6 +1281,9 @@ def apply_filters():
             'status': 'success',
             'data': {
                 'monthly_data': monthly_data,
+                'amount_distribution': amount_distribution,
+                'approval_data': approval_data,
+                'processing_data': processing_data_formatted,
                 'total_disbursed': total_disbursed,
                 'total_count': total_count,
                 'avg_ticket': avg_ticket
