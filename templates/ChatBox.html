@@ -67,31 +67,7 @@
                 background-color: white;
             }
 
-            .gradient-text {
-                text-align: center;
-                background: linear-gradient(to right,
-                        #ff0000,
-                        /* Red */
-                        #ff7f00,
-                        /* Orange */
-                        #ffff00,
-                        /* Yellow */
-                        #00ff00,
-                        /* Green */
-                        #0000ff,
-                        /* Blue */
-                        #4b0082,
-                        /* Indigo */
-                        #8f00ff
-                        /* Violet */
-                    );
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-                font-size: 54px;
-                animation: rainbow 12s linear infinite;
-                background-size: 400% 100%;
-            }
+            
 
             @keyframes rainbow {
                 0% {
@@ -336,9 +312,6 @@
                     font-size: 24px;
                 }
 
-                .gradient-text {
-                    font-size: 36px;
-                }
             }
 
             @media (max-width: 768px) {
@@ -377,9 +350,6 @@
                     max-width: 200px;
                 }
 
-                .gradient-text {
-                    font-size: 28px;
-                }
 
                 .hero-section {
                     padding: 0.5rem;
@@ -838,11 +808,10 @@
             </di>
 
             <div class="maintwo">
-                <h1 class="gradient-text">Chat Support</h1>
                 <div class="chat-container">
                     <div class="chat-header">
                         <i class="mdi mdi-chat-processing"></i>
-                        <h2>AI Assistant</h2>
+                        <h4 style="color: white;"> CREDMANTRA AI Assistant</h4>
                     </div>
                     <div class="chat-messages" id="chatMessages">
                         <!-- Messages will appear here -->  

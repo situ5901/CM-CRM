@@ -10,7 +10,8 @@ import openpyxl
 from openpyxl.styles import Font
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase    
+from email.mime.base import MIMEBase 
+from dotenv import load_dotenv
 from email import encoders
 from openpyxl import Workbook
 from flask import Flask, render_template, request, session
@@ -24,6 +25,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -32,7 +34,7 @@ app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:m1jZa
 CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
 
 # Update MongoDB connection
-mongo_uri = "mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net/"
+mongo_uri = os.environ.get('MONGO_URL')  # Make sure to use the correct key name from .env file
 client = MongoClient(mongo_uri)
 db = client['test']
 mongo = client  # This creates a mongo instance that Flask can use
