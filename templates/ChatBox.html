@@ -17,6 +17,13 @@
 
         <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
         <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+        <!-- Add these new CSS and JS libraries -->
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
+
         <style>
             .main {
                 display: flex;
@@ -388,6 +395,383 @@
         margin-bottom: 20px;
     }
 
+    .chat-container {
+        height: calc(100vh - 200px);
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        display: flex;
+        flex-direction: column;
+        margin: 20px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .chat-header {
+        background: #243771;
+        color: white;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chat-header i {
+        font-size: 24px;
+    }
+
+    .chat-messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+        scroll-behavior: smooth;
+        background: #f8f9fa;
+    }
+
+    .message {
+        margin: 10px 0;
+        padding: 15px 20px;
+        border-radius: 15px;
+        max-width: 70%;
+        position: relative;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .user-message {
+        background: linear-gradient(135deg, #243771, #1a2a5e);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+    }
+
+    .bot-message {
+        background: white;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .chat-option {
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #e0e0e0;
+        margin: 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .chat-option:hover {
+        background: #243771;
+        color: white;
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .chat-option i {
+        font-size: 20px;
+    }
+
+    .chat-input-container {
+        padding: 20px;
+        border-top: 1px solid #eee;
+        background: white;
+        display: flex;
+        gap: 10px;
+    }
+
+    #messageInput {
+        flex-grow: 1;
+        padding: 15px;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    #messageInput:focus {
+        border-color: #243771;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(36,55,113,0.1);
+    }
+
+    #sendButton {
+        padding: 15px 25px;
+        background: #243771;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #sendButton:hover {
+        background: #1a2a5e;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Loading Animation */
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 10px;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #243771;
+        border-radius: 50%;
+        animation: typingAnimation 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingAnimation {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .message {
+            max-width: 85%;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+        }
+
+        #messageInput {
+            padding: 12px;
+        }
+
+        #sendButton {
+            padding: 12px 20px;
+        }
+    }
+
+    .countdown-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+        background: linear-gradient(145deg, #243771, #1a2a5e);
+        border-radius: 15px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .countdown-text {
+        font-size: 1.2em;
+        font-weight: 500;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .countdown-number {
+        font-size: 3em;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        animation: pulse 1s infinite;
+    }
+
+    .countdown-loader {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: #4CAF50;
+        width: 100%;
+        animation: loading 5s linear;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes loading {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+
+    .welcome-container {
+        background: linear-gradient(145deg, #243771, #1a2a5e);
+        padding: 15px;
+        border-radius: 15px;
+        color: white;
+        display: inline-flex;
+        gap: 15px;
+        align-items: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        animation: slideIn 0.5s ease-out;
+        max-width: fit-content;
+    }
+
+    .welcome-icon {
+        font-size: 2em;
+        animation: wave 1s infinite;
+    }
+
+    .welcome-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        white-space: nowrap;
+    }
+
+    .welcome-name {
+        font-size: 1.4em;
+        font-weight: bold;
+        background: linear-gradient(to right, #fff, #e0e0e0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        padding: 0 5px;
+    }
+
+    .view-more-btn {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 5px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .view-more-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .details-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        z-index: 1000;
+        width: 90%;
+        max-width: 500px;
+        display: none;
+    }
+
+    .details-modal.active {
+        display: block;
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .modal-overlay.active {
+        display: block;
+    }
+
+    .details-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: #243771;
+    }
+
+    .form-group input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .modal-btn {
+        padding: 8px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        font-weight: 500;
+    }
+
+    .save-btn {
+        background: #243771;
+        color: white;
+    }
+
+    .cancel-btn {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translate(-50%, -60%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    @keyframes wave {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-20deg); }
+        75% { transform: rotate(20deg); }
+        100% { transform: rotate(0deg); }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
         </style>
     </head>
 
@@ -454,9 +838,643 @@
             </di>
 
             <div class="maintwo">
-                <h1 class="gradient-text">Welcome to CredMantra CRM</h1>
+                <h1 class="gradient-text">Chat Support</h1>
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <i class="mdi mdi-chat-processing"></i>
+                        <h2>AI Assistant</h2>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will appear here -->  
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="messageInput" placeholder="Type your message...">
+                        <button id="sendButton">
+                            <i class="mdi mdi-send"></i>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const messageInput = document.getElementById('messageInput');
+                const sendButton = document.getElementById('sendButton');
+                const chatMessages = document.getElementById('chatMessages');
+                let messageHistory = [];
+                let currentFlow = null;
+                let loanApplicationData = {};
+
+                function showCommands() {
+                    addMessage('Please select an option:', false, false, [
+                        { 
+                            text: 'chat bot', 
+                            icon: 'mdi-robot', 
+                            description: 'Start loan application' 
+                        },
+                        { 
+                            text: 'search', 
+                            icon: 'mdi-magnify', 
+                            description: 'Search user by phone' 
+                        }
+                    ]);
+                }
+
+                function createClickableOption(option, onClick) {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'chat-option animate__animated animate__fadeIn';
+                    optionElement.innerHTML = `
+                        <i class="mdi ${option.icon || getOptionIcon(option.text)}"></i>
+                        <div class="option-content">
+                            <span class="option-text">${option.text}</span>
+                            ${option.description ? `<span class="option-description">${option.description}</span>` : ''}
+                        </div>
+                    `;
+                    optionElement.onclick = onClick;
+                    return optionElement;
+                }
+
+                function addMessage(message, isUser = true, skipHistory = false, options = null) {
+                    if (!isUser) {
+                        // Show typing indicator
+                        const typingDiv = document.createElement('div');
+                        typingDiv.className = 'message bot-message typing-indicator';
+                        typingDiv.innerHTML = `
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        `;
+                        chatMessages.appendChild(typingDiv);
+
+                        setTimeout(() => {
+                            chatMessages.removeChild(typingDiv);
+                            displayActualMessage();
+                        }, 1500);
+                    } else {
+                        displayActualMessage();
+                    }
+
+                    function displayActualMessage() {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'} animate__animated animate__fadeInUp`;
+
+                        if (options) {
+                            const messageText = document.createElement('div');
+                            messageText.className = 'message-text';
+                            messageText.textContent = message;
+                            messageDiv.appendChild(messageText);
+
+                            const optionList = document.createElement('div');
+                            optionList.className = 'option-list';
+
+                            options.forEach(option => {
+                                const optionElement = createClickableOption(option, () => {
+                                    messageInput.value = option.text;
+                                    sendMessage();
+                                });
+                                optionList.appendChild(optionElement);
+                            });
+
+                            messageDiv.appendChild(optionList);
+                        } else {
+                            messageDiv.textContent = message;
+                        }
+
+                        chatMessages.appendChild(messageDiv);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                        if (!skipHistory) {
+                            messageHistory.push({
+                                message: message,
+                                isUser: isUser,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                    }
+                }
+
+                async function saveHistory() {
+                    try {
+                        await fetch('/chat/save_history', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ history: messageHistory })
+                        });
+                    } catch (error) {
+                        console.error('Error saving history:', error);
+                    }
+                }
+
+                async function clearHistory() {
+                    try {
+                        await saveHistory();
+                        await fetch('/chat/clear_history', { method: 'POST' });
+                        chatMessages.innerHTML = '';
+                        messageHistory = [];
+                        showNotification('Success', 'Chat history has been cleared and archived');
+                    } catch (error) {
+                        showNotification('Error', 'Failed to clear history', 'error');
+                    }
+                }
+
+                async function restoreHistory() {
+                    try {
+                        const response = await fetch('/chat/restore_history');
+                        const data = await response.json();
+                        
+                        if (data.success && data.history) {
+                            chatMessages.innerHTML = '';
+                            messageHistory = data.history;
+                            
+                            // Restore messages to chat
+                            messageHistory.forEach(msg => {
+                                addMessage(msg.message, msg.isUser, true);
+                            });
+                            
+                            addMessage('Chat history has been restored.', false);
+                        } else {
+                            addMessage('No history available to restore.', false);
+                        }
+                    } catch (error) {
+                        addMessage('Error restoring history.', false);
+                    }
+                }
+
+                async function deleteAllHistory() {
+                    try {
+                        await fetch('/chat/delete_history', { method: 'DELETE' });
+                        chatMessages.innerHTML = '';
+                        messageHistory = [];
+                        addMessage('All chat history has been permanently deleted.', false);
+                    } catch (error) {
+                        addMessage('Error deleting history.', false);
+                    }
+                }
+
+                async function handlePhoneSearch(phoneNumber) {
+                    try {
+                        const response = await fetch(`/search_phone/${phoneNumber}`);
+                        const data = await response.json();
+                        
+                        if (data.error) {
+                            addMessage(data.error, false);
+                        } else {
+                            // Format and display the user data
+                            const userInfo = `
+                                Name: ${data.name || 'N/A'}
+                                Phone: ${data.phone || 'N/A'}
+                                Email: ${data.email || 'N/A'}
+                                Status: ${data.status || 'N/A'}
+                            `.trim();
+                            addMessage(userInfo, false);
+                        }
+                    } catch (error) {
+                        addMessage('Error searching phone number. Please try again.', false);
+                    }
+                }
+
+                async function handleLoanFlow(message) {
+                    if (!currentFlow) {
+                        if (message.toLowerCase() === 'personal loan') {
+                            currentFlow = 'personal_loan_phone';
+                            loanApplicationData.loanType = 'personal';
+                            addMessage('Please enter your phone number:', false);
+                        } else if (message.toLowerCase() === 'business loan') {
+                            currentFlow = 'business_loan_phone';
+                            loanApplicationData.loanType = 'business';
+                            addMessage('Please enter your phone number:', false);
+                        }
+                        return;
+                    }
+
+                    switch (currentFlow) {
+                        case 'personal_loan_phone':
+                        case 'business_loan_phone':
+                            const phoneNumber = message.replace(/\D/g, '');
+                            if (phoneNumber.length === 10) {
+                                loanApplicationData.phone = phoneNumber;
+                                currentFlow = 'otp';
+                                
+                                // Verify user details from API
+                                try {
+                                    const response = await fetch(`/search_phone/${phoneNumber}`);
+                                    const userData = await response.json();
+
+                                    if (!userData.error) {
+                                        // Create welcome message with animation
+                                        const welcomeMsg = document.createElement('div');
+                                        welcomeMsg.className = 'message bot-message animate__animated animate__fadeInUp';
+                                        welcomeMsg.innerHTML = `
+                                            <div class="welcome-container">
+                                                <div class="welcome-icon">👋</div>
+                                                <div class="welcome-content">
+                                                    <div class="welcome-name">${userData.name}</div>
+                                                    <div class="view-more-btn">View Details</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                        
+                                        // Create modal for details
+                                        const modalHtml = `
+                                            <div class="modal-overlay">
+                                                <div class="details-modal">
+                                                    <h2 style="color: #243771; margin-bottom: 20px;">User Details</h2>
+                                                    <form class="details-form">
+                                                        <div class="form-group">
+                                                            <label>Name</label>
+                                                            <input type="text" id="edit-name" value="${userData.name}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>Email</label>
+                                                            <input type="email" id="edit-email" value="${userData.email}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>PAN</label>
+                                                            <input type="text" id="edit-pan" value="${userData.pan}">
+                                                        </div>
+                                                        <div class="modal-buttons">
+                                                            <button type="button" class="modal-btn cancel-btn">Cancel</button>
+                                                            <button type="button" class="modal-btn save-btn">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        `;
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                                        
+                                        // Add event listeners for modal
+                                        const viewMoreBtn = welcomeMsg.querySelector('.view-more-btn');
+                                        const modalOverlay = document.querySelector('.modal-overlay');
+                                        const modal = document.querySelector('.details-modal');
+                                        const cancelBtn = modal.querySelector('.cancel-btn');
+                                        const saveBtn = modal.querySelector('.save-btn');
+                                        
+                                        viewMoreBtn.addEventListener('click', () => {
+                                            modalOverlay.classList.add('active');
+                                            modal.classList.add('active');
+                                        });
+                                        
+                                        cancelBtn.addEventListener('click', () => {
+                                            modalOverlay.classList.remove('active');
+                                            modal.classList.remove('active');
+                                        });
+                                        
+                                        modalOverlay.addEventListener('click', (e) => {
+                                            if (e.target === modalOverlay) {
+                                                modalOverlay.classList.remove('active');
+                                                modal.classList.remove('active');
+                                            }
+                                        });
+                                        
+                                        saveBtn.addEventListener('click', async () => {
+                                            const updatedData = {
+                                                name: document.getElementById('edit-name').value,
+                                                email: document.getElementById('edit-email').value,
+                                                pan: document.getElementById('edit-pan').value,
+                                                phone: userData.phone
+                                            };
+                                            
+                                            try {
+                                                const response = await fetch('/update_user_details', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json'
+                                                    },
+                                                    body: JSON.stringify(updatedData)
+                                                });
+                                                
+                                                if (response.ok) {
+                                                    // Update the welcome message with new name
+                                                    welcomeMsg.querySelector('.welcome-name').textContent = updatedData.name;
+                                                    modalOverlay.classList.remove('active');
+                                                    modal.classList.remove('active');
+                                                    addMessage('Details updated successfully!', false);
+                                                } else {
+                                                    addMessage('Failed to update details. Please try again.', false);
+                                                }
+                                            } catch (error) {
+                                                addMessage('Error updating details. Please try again.', false);
+                                            }
+                                        });
+                                        
+                                        chatMessages.appendChild(welcomeMsg);
+                                        
+                                        // After welcome message, show OTP prompt
+                                        setTimeout(() => {
+                                            addMessage('Please enter the OTP sent to your phone (use 1234 for testing):', false);
+                                        }, 1500);
+                                    } else {
+                                        addMessage('Please enter the OTP sent to your phone (use 1234 for testing):', false);
+                                    }
+                                } catch (error) {
+                                    addMessage('Please enter the OTP sent to your phone (use 1234 for testing):', false);
+                                }
+                            } else {
+                                addMessage('Please enter a valid 10-digit phone number.', false);
+                            }
+                            break;
+
+                        case 'otp':
+                            if (message === '1234') {
+                                // Verify user details from API
+                                try {
+                                    const response = await fetch(`/search_phone/${loanApplicationData.phone}`);
+                                    const userData = await response.json();
+
+                                    if (!userData.error) {
+                                        // User found, auto-fill details
+                                        loanApplicationData = {
+                                            ...loanApplicationData,
+                                            name: userData.name,
+                                            email: userData.email,
+                                            pan: userData.pan
+                                        };
+                                        addMessage(`Found your details!\nName: ${userData.name}\nEmail: ${userData.email}\nPAN: ${userData.pan}`, false);
+                                        currentFlow = 'confirm_details';
+                                        addMessage('Are these details correct? (yes/no)', false);
+                                    } else {
+                                        // User not found, ask for details
+                                        currentFlow = 'name';
+                                        addMessage('Please enter your full name:', false);
+                                    }
+                                } catch (error) {
+                                    currentFlow = 'name';
+                                    addMessage('Please enter your full name:', false);
+                                }
+                            } else {
+                                addMessage('Invalid OTP. Please enter 1234 for testing.', false);
+                            }
+                            break;
+
+                        case 'name':
+                            if (message.length >= 3) {
+                                loanApplicationData.name = message;
+                                currentFlow = 'pan';
+                                addMessage('Please enter your PAN number:', false);
+                            } else {
+                                addMessage('Please enter a valid name (at least 3 characters).', false);
+                            }
+                            break;
+
+                        case 'pan':
+                            const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+                            if (panRegex.test(message.toUpperCase())) {
+                                loanApplicationData.pan = message.toUpperCase();
+                                currentFlow = 'email';
+                                addMessage('Please enter your email address:', false);
+                            } else {
+                                addMessage('Please enter a valid PAN number (e.g., ABCDE1234F).', false);
+                            }
+                            break;
+
+                        case 'email':
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (emailRegex.test(message)) {
+                                loanApplicationData.email = message;
+                                currentFlow = 'completed';
+                                addMessage('🎉 Congratulations! You are approved for a loan of ₹2,00,000!', false);
+                                
+                                // Create countdown message element
+                                const countdownMsg = document.createElement('div');
+                                countdownMsg.className = 'message bot-message animate__animated animate__fadeInUp';
+                                countdownMsg.innerHTML = `
+                                    <div class="countdown-container">
+                                        <div class="countdown-text">Redirecting in</div>
+                                        <div class="countdown-number">5</div>
+                                        <div class="countdown-loader"></div>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(countdownMsg);
+
+                                let count = 5;
+                                const countdownInterval = setInterval(() => {
+                                    count--;
+                                    const numberElement = countdownMsg.querySelector('.countdown-number');
+                                    if (numberElement) numberElement.textContent = count;
+                                    
+                                    if (count < 0) {
+                                        clearInterval(countdownInterval);
+                                        window.open('https://www.credmantra.com', '_blank');
+                                        countdownMsg.remove();
+                                    }
+                                }, 1000);
+
+                                currentFlow = null;
+                                loanApplicationData = {};
+                            } else {
+                                addMessage('Please enter a valid email address.', false);
+                            }
+                            break;
+
+                        case 'confirm_details':
+                            if (message.toLowerCase() === 'yes') {
+                                currentFlow = 'completed';
+                                addMessage('🎉 Congratulations! You are approved for a loan of ₹2,00,000!', false);
+                                
+                                // Create countdown message element
+                                const countdownMsg = document.createElement('div');
+                                countdownMsg.className = 'message bot-message animate__animated animate__fadeInUp';
+                                countdownMsg.innerHTML = `
+                                    <div class="countdown-container">
+                                        <div class="countdown-text">Redirecting in</div>
+                                        <div class="countdown-number">5</div>
+                                        <div class="countdown-loader"></div>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(countdownMsg);
+
+                                let count = 5;
+                                const countdownInterval = setInterval(() => {
+                                    count--;
+                                    const numberElement = countdownMsg.querySelector('.countdown-number');
+                                    if (numberElement) numberElement.textContent = count;
+                                    
+                                    if (count < 0) {
+                                        clearInterval(countdownInterval);
+                                        window.open('https://www.credmantra.com', '_blank');
+                                        countdownMsg.remove();
+                                    }
+                                }, 1000);
+
+                                currentFlow = null;
+                                loanApplicationData = {};
+                            } else {
+                                currentFlow = 'name';
+                                addMessage('Please enter your full name:', false);
+                            }
+                            break;
+                    }
+                }
+
+                function sendMessage(manualText = null) {
+                    const message = manualText || messageInput.value.trim();
+                    if (!message) return;
+
+                    addMessage(message, true);
+                    messageInput.value = '';
+
+                    switch (message.toLowerCase()) {
+                        case 'start':
+                            showCommands();
+                            break;
+
+                        case 'chat bot':
+                            addMessage('Please select your loan type:', false, false, [
+                                { text: 'Personal Loan', icon: 'mdi-account' },
+                                { text: 'Business Loan', icon: 'mdi-office-building' }
+                            ]);
+                            break;
+
+                        case 'search':
+                            addMessage('Please enter a phone number to search:', false);
+                            messageInput.placeholder = 'Enter phone number...';
+                            messageInput.dataset.mode = 'phone_search';
+                            break;
+
+                        case 'clear':
+                        case 'restore':
+                        case 'all clear':
+                            handleAdminCommands(message.toLowerCase());
+                            break;
+
+                        default:
+                            if (messageInput.dataset.mode === 'phone_search') {
+                                const phoneNumber = message.replace(/\D/g, '');
+                                if (phoneNumber.length >= 10) {
+                                    handlePhoneSearch(phoneNumber);
+                                    messageInput.placeholder = 'Type your message...';
+                                    delete messageInput.dataset.mode;
+                                } else {
+                                    addMessage('Please enter a valid phone number (at least 10 digits)', false);
+                                }
+                            } else if (message.toLowerCase() === 'personal loan' || message.toLowerCase() === 'business loan' || currentFlow) {
+                                handleLoanFlow(message);
+                            } else {
+                                setTimeout(() => {
+                                    addMessage("Type 'start' to see available options.", false);
+                                }, 500);
+                            }
+                    }
+                }
+
+                function handleAdminCommands(command) {
+                    switch(command) {
+                        case 'clear':
+                            clearHistory();
+                            break;
+                        case 'restore':
+                            restoreHistory();
+                            break;
+                        case 'all clear':
+                            deleteAllHistory();
+                            break;
+                    }
+                    
+                    // After handling the command, show the main options again
+                    setTimeout(() => {
+                        showCommands();
+                    }, 1000);
+                }
+
+                sendButton.addEventListener('click', sendMessage);
+                messageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+
+                // Add these new styles to your existing styles
+                const newStyles = `
+                    .option-content {
+                        display: flex;
+                        flex-direction: column;
+                        flex-grow: 1;
+                    }
+
+                    .option-text {
+                        font-weight: 500;
+                    }
+
+                    .option-description {
+                        font-size: 0.8em;
+                        opacity: 0.7;
+                    }
+
+                    .message-text {
+                        margin-bottom: 10px;
+                        font-weight: 500;
+                    }
+
+                    .chat-option {
+                        background: white;
+                        padding: 12px 20px;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        border: 1px solid #e0e0e0;
+                        margin: 5px 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    }
+
+                    .chat-option:hover {
+                        background: #243771;
+                        color: white;
+                        transform: translateX(5px);
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                    }
+
+                    .chat-option i {
+                        font-size: 24px;
+                        min-width: 24px;
+                    }
+                `;
+
+                // Add the new styles to the document
+                const styleSheet = document.createElement("style");
+                styleSheet.innerText = newStyles;
+                document.head.appendChild(styleSheet);
+
+                // Update initial bot message
+                setTimeout(() => {
+                    addMessage("👋 Welcome to CredMantra AI Assistant! Type 'start' to begin.", false);
+                }, 500);
+            });
+
+            // Helper function to get appropriate icon for options
+            function getOptionIcon(text) {
+                const iconMap = {
+                    'chat bot': 'mdi-robot',
+                    'search': 'mdi-magnify',
+                    'clear': 'mdi-delete',
+                    'restore': 'mdi-restore',
+                    'all clear': 'mdi-delete-forever',
+                    'Personal Loan': 'mdi-account',
+                    'Business Loan': 'mdi-office-building'
+                };
+                return iconMap[text.toLowerCase()] || 'mdi-chevron-right';
+            }
+
+            // Enhanced notifications using SweetAlert2
+            function showNotification(title, text, icon = 'success') {
+                Swal.fire({
+                    title,
+                    text,
+                    icon,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+        </script>
     </body>
 
     </html>

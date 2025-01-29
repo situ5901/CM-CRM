@@ -17,6 +17,8 @@
 
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
     <style>
         .main {
             display: flex;
@@ -55,8 +57,9 @@
         .maintwo {
             width: calc(100% - 250px);
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
             background-color: white;
+            scroll-behavior: smooth;
         }
 
         .gradient-text {
@@ -410,6 +413,260 @@
             background: #555;
         }
 
+        /* New styles for settings page */
+        .settings-container {
+            background-color: #f5f7fa;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px;
+            min-height: calc(100vh - 40px);
+            position: relative;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .settings-section:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .settings-section:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-section h3 {
+            color: #012141;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dce4ec;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .rights-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .rights-section label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .rights-section input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #3498db;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, #012141 0%, #3498db 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .settings-header {
+            background: linear-gradient(135deg, #012141 0%, #3498db 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .settings-header i {
+            font-size: 24px;
+            animation: pulse 2s infinite;
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .maintwo {
+                width: 100%;
+            }
+            
+            .settings-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .settings-section {
+                padding: 15px;
+            }
+        }
+
+        .user-management-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #f5f7fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #012141;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        #usersTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #usersTable th,
+        #usersTable td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #usersTable th {
+            background-color: #f5f7fa;
+            color: #012141;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .status-badge.active {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .status-badge.inactive {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .action-btn.edit {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .action-btn.toggle {
+            background-color: #95a5a6;
+            color: white;
+        }
+
     </style>
 </head>
 
@@ -476,95 +733,204 @@
         </di>
 
 <div class="maintwo">
-    <div class="settings-container" style="width: 100%; max-width: 100%; padding: 20px; margin-top: 20px; height: calc(100vh - 40px); overflow-y: auto;">
-        <div class="settingheader" style="background-color: #012141; height: 50px; display: flex; justify-content: center; align-items: center;">
-            <img src="{{ url_for('static', filename='cm.png') }}" alt="Logo" class="logo">
+    <div class="settings-container">
+        <div class="settings-header">
+            <i class="fas fa-cog fa-spin"></i>
+            <h2>Settings & User Management</h2>
         </div>
 
-        <!-- Section for Changing Password -->
-        <div class="change-password-section">
+        <!-- Password Change Section -->
+        <div class="settings-section">
+            <h3><i class="fas fa-lock"></i> Change Password</h3>
             <form action="{{ url_for('change_password') }}" method="POST">
-                <label for="current_password">Current Password:</label>
-                <input type="password" id="current_password" name="current_password" required>
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" required>
+                </div>
                 
-                <label for="new_password">New Password:</label>
-                <input type="password" id="new_password" name="new_password" required>
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" required>
+                </div>
                 
-                <label for="confirm_password">Confirm New Password:</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
 
                 <button type="submit">Update Password</button>
             </form>
         </div>
 
-        <!-- Section for User Creation with Role Management -->
-        <div class="create-user-section">
-            <h3>Create New User</h3>
-            <form action="{{ url_for('create_user') }}" method="POST">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+        <!-- User Creation Section -->
+        <div class="settings-section">
+            <h3><i class="fas fa-users-cog"></i> User Management</h3>
+            <div class="user-management-tabs">
+                <button class="tab-btn active" onclick="showTab('create')">Create User</button>
+                <button class="tab-btn" onclick="showTab('view')">View Users</button>
+            </div>
 
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+            <!-- Create User Form -->
+            <div id="createUserTab" class="tab-content active">
+                <form action="{{ url_for('create_user') }}" method="POST" class="user-form">
+                    <div class="form-group">
+                        <label for="username">Username*</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
 
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                    <div class="form-group">
+                        <label for="email">Email*</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
 
-                <!-- Role Selection -->
-                <label for="role">Role:</label>
-                <select id="role" name="role">
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Employee">Employee</option>
-                </select>
+                    <div class="form-group">
+                        <label for="password">Password*</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
 
-                <!-- Rights Management Section -->
-                <h4>Assign Rights</h4>
-                <div class="rights-section">
-                    <label><input type="checkbox" name="rights" value="view_reports"> View Reports</label>
-                    <label><input type="checkbox" name="rights" value="edit_profile"> Edit Profile</label>
-                    <label><input type="checkbox" name="rights" value="manage_users"> Manage Users</label>
-                    <label><input type="checkbox" name="rights" value="access_financials"> Access Financials</label>
-                    <label><input type="checkbox" name="rights" value="generate_reports"> Generate Reports</label>
+                    <div class="form-group">
+                        <label for="role">Role*</label>
+                        <select id="role" name="role" onchange="updatePermissions()">
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="employee">Employee</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" name="department">
+                            <option value="hr">Human Resources</option>
+                            <option value="it">Information Technology</option>
+                            <option value="finance">Finance</option>
+                            <option value="operations">Operations</option>
+                            <option value="sales">Sales</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group permissions-section">
+                        <h4><i class="fas fa-shield-alt"></i> Permissions</h4>
+                        <div class="rights-section" id="permissionsContainer">
+                            <!-- Permissions will be dynamically updated based on role -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Create User</button>
+                </form>
+            </div>
+
+            <!-- View Users Table -->
+            <div id="viewUserTab" class="tab-content">
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>{{ user.department }}</td>
+                                <td>
+                                    <span class="status-badge {{ user.status }}">{{ user.status }}</span>
+                                </td>
+                                <td>
+                                    <button onclick="editUser('{{ user._id }}')" class="action-btn edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="toggleUserStatus('{{ user._id }}')" class="action-btn toggle">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-
-                <button type="submit">Create User</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-    .maintwo {
-        width: calc(100% - 250px);
-        height: 100vh;
-        overflow: hidden;
-        background-color: white;
-    }
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabName + 'UserTab').classList.add('active');
+    event.target.classList.add('active');
+}
 
-    .settings-container {
-        margin: 0 auto;
-        scrollbar-width: thin;
-        scrollbar-color: #888 #f1f1f1;
-    }
+function updatePermissions() {
+    const role = document.getElementById('role').value;
+    const permissionsContainer = document.getElementById('permissionsContainer');
+    
+    // Define permissions for each role
+    const permissions = {
+        admin: [
+            'manage_users', 'view_reports', 'edit_profile', 'manage_departments',
+            'access_financials', 'generate_reports', 'system_settings'
+        ],
+        manager: [
+            'view_reports', 'edit_profile', 'manage_team',
+            'generate_reports', 'view_analytics'
+        ],
+        employee: [
+            'view_profile', 'submit_reports', 'view_schedule',
+            'request_leave', 'view_team'
+        ]
+    };
 
-    .settings-container::-webkit-scrollbar {
-        width: 8px;
-    }
+    // Update permissions checkboxes
+    permissionsContainer.innerHTML = permissions[role].map(perm => `
+        <label>
+            <input type="checkbox" name="permissions[]" value="${perm}"
+                   ${role === 'admin' ? 'checked disabled' : ''}>
+            ${perm.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+        </label>
+    `).join('');
+}
 
-    .settings-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
+// Initialize permissions on page load
+document.addEventListener('DOMContentLoaded', () => {
+    updatePermissions();
+});
 
-    .settings-container::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 4px;
-    }
-
-    .settings-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-</style>
+function toggleUserStatus(userId) {
+    fetch(`/toggle_user_status/${userId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            // Update the status badge in the UI
+            const statusBadge = document.querySelector(`tr[data-user-id="${userId}"] .status-badge`);
+            if (statusBadge) {
+                statusBadge.className = `status-badge ${data.status}`;
+                statusBadge.textContent = data.status;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating user status');
+    });
+}
+</script>
 
 </body>
 

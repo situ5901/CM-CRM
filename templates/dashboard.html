@@ -1474,6 +1474,7 @@ function savePartnersToDb() {
                                 <th style="background-color: #4CAF50;">Status</th>
                                 <th style="background-color: #4CAF50;">Lender</th>
                                 <th style="background-color: #4CAF50;">Created At</th>
+                                <th style="background-color: #4CAF50;">partner</th>
                                 <th style="background-color: #4CAF50;">Partner</th>
                             </tr>
                         </thead>
@@ -1486,7 +1487,8 @@ function savePartnersToDb() {
                                 <td>{{ row.status }}</td>
                                 <td>{{ row.Lender }}</td>
                                 <td>{{ row.createdAt }}</td>
-                                <td></td>  <!-- Empty partner cell -->
+                                <td>{{ row.partner }}</td>
+                                <td>{{ row.Partner }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1494,7 +1496,7 @@ function savePartnersToDb() {
                             <tr>
                                 <td>Total:</td>
                                 <td id="total-disbursed">{{ total_disbursed }}</td>
-                                <td colspan="5" id="total-count">{{ total_count }} records</td>
+                                <td colspan="6" id="total-count">{{ total_count }} records</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -2509,7 +2511,8 @@ function savePartnersToDb() {
                             rowData[3],  // Status
                             rowData[4],  // Lender
                             rowData[5],  // Created At
-                            rowData[6]   // Partner
+                            rowData[6],  // partner
+                            rowData[7]   // Partner
                         ]);
                     }
                 });
@@ -2600,7 +2603,7 @@ function savePartnersToDb() {
                 { wch: 12 }, // Disbursal Date
                 { wch: 10 }, // Status
                 { wch: 12 }, // Lender
-                { wch: 12 }, // Created At
+                { wch: 15 }, // partner
                 { wch: 15 }  // Partner
             ];
 
@@ -3164,9 +3167,12 @@ function savePartnersToDb() {
                     const phone = this.data()[0].toString().trim();
                     if (batch.includes(phone) && partnerData[phone]) {
                         const partner = partnerData[phone].partner;
+                        const Partner = partnerData[phone].Partner;
                         const row = $(this.node());
-                        const partnerCell = row.find('td:last');
+                        const partnerCell = row.find('td:eq(6)'); // partner column
+                        const PartnerCell = row.find('td:eq(7)'); // Partner column
                         partnerCell.text(partner || '');
+                        PartnerCell.text(Partner || '');
                     }
                 });
 
@@ -3274,16 +3280,17 @@ function savePartnersToDb() {
         // Clear existing search function
         $.fn.dataTable.ext.search.pop();
 
-        // Add new search function
+        // Add new search function that checks both partner columns
         $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-            const partner = data[6]; // Partner column
+            const partner = data[6]; // partner column
+            const Partner = data[7]; // Partner column
 
             if (selectedPartner === '') {
                 return true; // Show all rows
             } else if (selectedPartner === 'blank') {
-                return !partner || partner.trim() === '';
+                return (!partner || partner.trim() === '') && (!Partner || Partner.trim() === '');
             } else {
-                return partner === selectedPartner;
+                return partner === selectedPartner || Partner === selectedPartner;
             }
         });
 
@@ -3974,7 +3981,8 @@ function savePartnersToDb() {
                     status: rowData[3],
                     Lender: rowData[4],
                     createdAt: rowData[5],
-                    Partner: rowData[6]
+                    partner: rowData[6],
+                    Partner: rowData[7]
                 });
             });
 
