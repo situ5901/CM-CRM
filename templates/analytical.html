@@ -1,1544 +1,1558 @@
-{% set active_page = 'analytical' %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
 <head>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<div class="analyticalmain">
-    <div class="analyticalmain2">
-        <!-- Sidebar content... -->
-        <div class="secContent">
-            <div class="navbarsec">
-                <div class="logo-container">
-                    <img src="{{ url_for('static', filename='cm.png') }}" alt="Logo" class="logo">
-                    <h3 style="color: white;text-align: center;">{{ username }}</h3>
+<body>
+    <div class="analyticalmain">
+        <div class="analyticalmain2">
+            <!-- Sidebar content... -->
+            <div class="secContent">
+                <div class="navbarsec">
+                    <div class="logo-container">
+                        <img src="{{ url_for('static', filename='cm.png') }}" alt="Logo" class="logo">
+                        <h3 style="color: white;text-align: center;">{{ username }}</h3>
+                    </div>
+                    <nav class="vertical-nav">
+                        <ul>
+                            <li>
+                                <a href="/home" {% if active_page == 'home' %}class="active"{% endif %}>
+                                    <i class="fas fa-home"></i>
+                                    <span>Home</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/dashboard" {% if active_page == 'dashboard' %}class="active"{% endif %}>
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/attendance" {% if active_page == 'attendance' %}class="active"{% endif %}>
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>Attendance</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/analytical" {% if active_page == 'analytical' %}class="active"{% endif %}>
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Analytics</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/settings" {% if active_page == 'settings' %}class="active"{% endif %}>
+                                    <i class="fas fa-cog"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/data_upload" {% if active_page == 'data_upload' %}class="active"{% endif %}>
+                                    <i class="fas fa-upload"></i>
+                                    <span>Upload Data</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/ChatBox">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>ChatBox</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/logout">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
-                <nav class="vertical-nav">
-                    <ul>
-                        <li>
-                            <a href="/home" {% if active_page == 'home' %}class="active"{% endif %}>
-                                <i class="fas fa-home"></i>
-                                <span>Home</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard" {% if active_page == 'dashboard' %}class="active"{% endif %}>
-                                <i class="fas fa-chart-line"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/attendance" {% if active_page == 'attendance' %}class="active"{% endif %}>
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Attendance</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/analytical" {% if active_page == 'analytical' %}class="active"{% endif %}>
-                                <i class="fas fa-chart-bar"></i>
-                                <span>Analytics</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/settings" {% if active_page == 'settings' %}class="active"{% endif %}>
-                                <i class="fas fa-cog"></i>
-                                <span>Settings</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/data_upload" {% if active_page == 'data_upload' %}class="active"{% endif %}>
-                                <i class="fas fa-upload"></i>
-                                <span>Upload Data</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/ChatBox">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>ChatBox</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/logout">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Logout</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+            </div>
+        </div>
+
+        <div class="analytics-container">
+            <div class="txty">
+                <h1 class="dashboard-title" style="color: whitesmoke;">Analytics Dashboard</h1>
+            </div>
+
+            <!-- Top Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">TOTAL DISBURSALS</div>
+                    <div class="stat-amount">₹{{ "%.2f"|format(total_disbursed|float) }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">TOTAL COUNT</div>
+                    <div class="stat-amount">{{ total_count }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">AVG TICKET SIZE</div>
+                    <div class="stat-amount">₹{{ "%.2f"|format(avg_ticket|float) }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">TOP LENDER</div>
+                    <div class="stat-amount">{{ top_lender }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">TOP PARTNER</div>
+                    <div class="stat-amount">{{ top_partner }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select id="dateRange" name="date_range">
+                        <option value="Last 30 Days">Last 30 Days</option>
+                        <option value="Last 90 Days">Last 90 Days</option>
+                        <option value="Custom Range">Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Lender</label>
+                    <select id="lender" name="lender">
+                        <option value="All Lenders">All Lenders</option>
+                        {% for lender in lenders %}
+                        <option value="{{ lender }}">{{ lender }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Partner</label>
+                    <select id="partner" name="partner">
+                        <option value="All Partners">All Partners</option>
+                        {% for partner in partners %}
+                        <option value="{{ partner }}">{{ partner }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="status" name="status">
+                        <option value="All Status">All Status</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Amount Range</label>
+                    <select id="amountRange" name="amount_range">
+                        <option value="All Amounts">All Amounts</option>
+                        {% for range in amount_ranges %}
+                        <option value="{{ range }}">₹{{ range }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="layout-controls">
+                <button onclick="resetLayout()">Reset Layout</button>
+                <button onclick="toggleCompactView()">Toggle Compact View</button>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>MONTHLY TRENDS</h3>
+                    <canvas id="monthlyTrendsChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>LOAN AMOUNT DISTRIBUTION</h3>
+                    <canvas id="amountDistributionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>APPROVAL RATE TRENDS</h3>
+                    <canvas id="approvalRateChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>PROCESSING TIME ANALYSIS</h3>
+                    <canvas id="processingTimeChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>DISBURSAL DATE ANALYSIS</h3>
+                    <canvas id="disbursalDateChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>LENDER DISTRIBUTION</h3>
+                    <canvas id="lenderDistributionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>PARTNER PERFORMANCE</h3>
+                    <canvas id="partnerPerformanceChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>STATUS DISTRIBUTION</h3>
+                    <canvas id="statusDistributionChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="analytics-container">
-        <div class="txty">
-            <h1 class="dashboard-title" style="color: whitesmoke;">Analytics Dashboard</h1>
-        </div>
-
-        <!-- Top Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">TOTAL DISBURSALS</div>
-                <div class="stat-amount">₹{{ "%.2f"|format(total_disbursed|float) }}</div>
-                <div class="stat-icon">
-                    <i class="fas fa-rupee-sign"></i>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">TOTAL COUNT</div>
-                <div class="stat-amount">{{ total_count }}</div>
-                <div class="stat-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">AVG TICKET SIZE</div>
-                <div class="stat-amount">₹{{ "%.2f"|format(avg_ticket|float) }}</div>
-                <div class="stat-icon">
-                    <i class="fas fa-ticket-alt"></i>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">TOP LENDER</div>
-                <div class="stat-amount">{{ top_lender }}</div>
-                <div class="stat-icon">
-                    <i class="fas fa-crown"></i>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">TOP PARTNER</div>
-                <div class="stat-amount">{{ top_partner }}</div>
-                <div class="stat-icon">
-                    <i class="fas fa-handshake"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters Section -->
-        <div class="filters-section">
-            <div class="filter-group">
-                <label>Date Range</label>
-                <select id="dateRange" name="date_range">
-                    <option value="Last 30 Days">Last 30 Days</option>
-                    <option value="Last 90 Days">Last 90 Days</option>
-                    <option value="Custom Range">Custom Range</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Lender</label>
-                <select id="lender" name="lender">
-                    <option value="All Lenders">All Lenders</option>
-                    {% for lender in lenders %}
-                    <option value="{{ lender }}">{{ lender }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Partner</label>
-                <select id="partner" name="partner">
-                    <option value="All Partners">All Partners</option>
-                    {% for partner in partners %}
-                    <option value="{{ partner }}">{{ partner }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Status</label>
-                <select id="status" name="status">
-                    <option value="All Status">All Status</option>
-                    {% for status in statuses %}
-                    <option value="{{ status }}">{{ status }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Amount Range</label>
-                <select id="amountRange" name="amount_range">
-                    <option value="All Amounts">All Amounts</option>
-                    {% for range in amount_ranges %}
-                    <option value="{{ range }}">₹{{ range }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-
-        <!-- Charts Grid -->
-        <div class="layout-controls">
-            <button onclick="resetLayout()">Reset Layout</button>
-            <button onclick="toggleCompactView()">Toggle Compact View</button>
-        </div>
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>MONTHLY TRENDS</h3>
-                <canvas id="monthlyTrendsChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>LOAN AMOUNT DISTRIBUTION</h3>
-                <canvas id="amountDistributionChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>APPROVAL RATE TRENDS</h3>
-                <canvas id="approvalRateChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>PROCESSING TIME ANALYSIS</h3>
-                <canvas id="processingTimeChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>DISBURSAL DATE ANALYSIS</h3>
-                <canvas id="disbursalDateChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>LENDER DISTRIBUTION</h3>
-                <canvas id="lenderDistributionChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>PARTNER PERFORMANCE</h3>
-                <canvas id="partnerPerformanceChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>STATUS DISTRIBUTION</h3>
-                <canvas id="statusDistributionChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-<style>
-    
-    .txty{
-        background-color: #012141;
-        height: 50px;
-        border-radius: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    .analyticalmain2{
-        background-color: #012141;
-        padding: 20px;
-        width: 20%;
-    }
-    .analyticalmain{
-        border-top-left-radius: 20px;
-        display: flex;
-        padding: 20px;
-    }
-.analytics-container {
-    width: 80%;
-    padding: 20px;
-    background: #f8f9fa;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.dashboard-title {
-    font-size: 24px;
-    color: whitesmoke;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    width: 100%;
-}
-
-.txty * {
-    margin: 0 auto;
-    text-align: center;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
-    width: 100%;
-}
-
-.stat-card {
-    color: white;
-    background-color: #012141;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-header {
-    font-size: 12px;
-    font-weight: 600;
-    color: white;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
-
-.stat-amount {
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.stat-icon {
-    position: absolute;
-    right: 15px;
-    bottom: 15px;
-    font-size: 18px;
-    opacity: 0.8;
-    color: #4299e1;
-}
-
-/* Individual icon colors - all in blue shades */
-.stat-card:nth-child(1) .stat-icon {
-    color: #3182ce;
-}
-
-.stat-card:nth-child(2) .stat-icon {
-    color: #4299e1;
-}
-
-.stat-card:nth-child(3) .stat-icon {
-    color: #63b3ed;
-}
-
-.stat-card:nth-child(4) .stat-icon {
-    color: #2b6cb0;
-}
-
-.stat-card:nth-child(5) .stat-icon {
-    color: #2c5282;
-}
-
-/* Also update the border colors to match */
-.stat-card:nth-child(1) {
-    background: linear-gradient(135deg, #012141 0%, #012141 100%);
-    border-left: 4px solid #3182ce;
-}
-
-.stat-card:nth-child(2) {
-    background: linear-gradient(135deg, #012141 0%, #012141 100%);
-    border-left: 4px solid #4299e1;
-}
-
-.stat-card:nth-child(3) {
-    background: linear-gradient(135deg, #012141 0%, #012141 100%);
-    border-left: 4px solid #63b3ed;
-}
-
-.stat-card:nth-child(4) {
-    background: linear-gradient(135deg, #012141 0%, #012141 100%);
-    border-left: 4px solid #2b6cb0;
-}
-
-.stat-card:nth-child(5) {
-    background: linear-gradient(135deg, #012141 0%, #012141 100%);
-    border-left: 4px solid #2c5282;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .stat-amount {
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .stat-header {
-        font-size: 11px;
-    }
-    
-    .stat-amount {
-        font-size: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.filters-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding: 20px;
-    background: #ffebee;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.filter-group label {
-    font-size: 12px;
-    color: #d32f2f;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.filter-group select {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.filter-group select:hover {
-    border-color: #3498db;
-}
-
-.filter-group select:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.apply-filters {
-    align-self: flex-end;
-    background: #ef5350;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.apply-filters:hover {
-    background: #e53935;
-}
-
-.apply-filters:disabled {
-    background-color: #ffcdd2;
-    cursor: not-allowed;
-}
-
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
-    width: 100%;
-}
-
-.chart-card {
-    background: #e3f2fd;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #bbdefb;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-}
-
-.chart-card h3 {
-    font-size: 14px;
-    color: #1565c0;
-    margin-bottom: 20px;
-    font-weight: 600;
-    text-align: center;
-}
-
-/* Loading state for charts */
-.chart-card.loading {
-    position: relative;
-    opacity: 0.7;
-}
-
-.chart-card.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* Animation for loading spinner */
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .charts-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
+    <style>
+        .txty{
+            background-color: #012141;
+            height: 50px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .analyticalmain2{
+            background-color: #012141;
+            padding: 20px;
+            width: 20%;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+        .analyticalmain{
+            border-top-left-radius: 20px;
+            display: flex;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
     .analytics-container {
+        width: 80%;
+        padding: 20px;
+        background: #f8f9fa;
+        margin-left: 20%;
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    .dashboard-title {
+        font-size: 24px;
+        color: whitesmoke;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        width: 100%;
+    }
+
+    .txty * {
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+        width: 100%;
+    }
+
+    .stat-card {
+        color: white;
+        background-color: #012141;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-header {
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+
+    .stat-amount {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-icon {
+        position: absolute;
+        right: 15px;
+        bottom: 15px;
+        font-size: 18px;
+        opacity: 0.8;
+        color: #4299e1;
+    }
+
+    /* Individual icon colors - all in blue shades */
+    .stat-card:nth-child(1) .stat-icon {
+        color: #3182ce;
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+        color: #4299e1;
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+        color: #63b3ed;
+    }
+
+    .stat-card:nth-child(4) .stat-icon {
+        color: #2b6cb0;
+    }
+
+    .stat-card:nth-child(5) .stat-icon {
+        color: #2c5282;
+    }
+
+    /* Also update the border colors to match */
+    .stat-card:nth-child(1) {
+        background: linear-gradient(135deg, #012141 0%, #012141 100%);
+        border-left: 4px solid #3182ce;
+    }
+
+    .stat-card:nth-child(2) {
+        background: linear-gradient(135deg, #012141 0%, #012141 100%);
+        border-left: 4px solid #4299e1;
+    }
+
+    .stat-card:nth-child(3) {
+        background: linear-gradient(135deg, #012141 0%, #012141 100%);
+        border-left: 4px solid #63b3ed;
+    }
+
+    .stat-card:nth-child(4) {
+        background: linear-gradient(135deg, #012141 0%, #012141 100%);
+        border-left: 4px solid #2b6cb0;
+    }
+
+    .stat-card:nth-child(5) {
+        background: linear-gradient(135deg, #012141 0%, #012141 100%);
+        border-left: 4px solid #2c5282;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+        .analyticalmain2 {
+            width: 25%;
+        }
+        .analytics-container {
+            width: 75%;
+            margin-left: 25%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .analyticalmain2 {
+            width: 60px;
+            padding: 10px;
+        }
+        .analytics-container {
+            width: calc(100% - 60px);
+            margin-left: 60px;
+        }
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .filters-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        padding: 20px;
+        background: #ffebee;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        font-size: 12px;
+        color: #d32f2f;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .filter-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .filter-group select:hover {
+        border-color: #3498db;
+    }
+
+    .filter-group select:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .apply-filters {
+        align-self: flex-end;
+        background: #ef5350;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .apply-filters:hover {
+        background: #e53935;
+    }
+
+    .apply-filters:disabled {
+        background-color: #ffcdd2;
+        cursor: not-allowed;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        padding: 20px 0;
+    }
+
+    .chart-card {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #bbdefb;
+        min-height: 300px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+
+    .chart-card h3 {
+        font-size: 14px;
+        color: #1565c0;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    /* Loading state for charts */
+    .chart-card.loading {
+        position: relative;
+        opacity: 0.7;
+    }
+
+    .chart-card.loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    /* Animation for loading spinner */
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .analytics-container {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .filters-section {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 4px;
+        color: white;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .notification.success {
+        background-color: #48bb78;
+    }
+
+    .notification.error {
+        background-color: #f56565;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Updated Navigation Bar Styles */
+    .mainone {
+        width: 250px;
+        background: #012141;
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+
+    .navbarsec h1 {
+        color: white;
+        text-align: center;
+        padding: 20px 0;
+        margin: 0;
+        font-size: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .vertical-nav {
         width: 100%;
         padding: 10px;
     }
 
+    .vertical-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .vertical-nav li {
+        margin: 0;
+    }
+
+    .vertical-nav a {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .vertical-nav a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .vertical-nav a.active {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .vertical-nav i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+        opacity: 0.9;
+    }
+
+    /* Main container layout */
+    .analyticalmain {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .analyticalmain2 {
+        border-top-left-radius: 20px;
+        background-color: #012141;
+        width: 20%;
+    }
+
+    .analytics-container {
+        width: 80%;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+        .analyticalmain2 {
+            width: 25%;
+        }
+        
+        .analytics-container {
+            width: 75%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .analyticalmain2 {
+            width: 80px;
+        }
+        
+        .analytics-container {
+            width: calc(100% - 80px);
+        }
+    }
+
+    /* Update the existing stats grid for full width */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+        width: 100%;
+    }
+
+    /* Update charts grid for full width */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        width: 100%;
+    }
+
+    /* Update filters section for full width */
     .filters-section {
-        grid-template-columns: 1fr;
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        width: 100%;
+        background: #ffebee;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #ffcdd2;
+    }
+
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        width: 100%;
+        background-color: #012141;  /* Matching your theme */
+        margin-bottom: 20px;
+    }
+
+    .logo {
+        max-width: 150px;
+        height: auto;
+        display: block;
+        transition: transform 0.3s ease;  /* Optional: for hover effect */
+    }
+
+    /* Optional: Add hover effect */
+    .logo:hover {
+        transform: scale(1.05);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .logo {
+            max-width: 120px;
+        }
+        
+        .logo-container {
+            padding: 15px;
+        }
+    }
+
+    /* Add these styles to your existing CSS */
+
+    .chart-card {
+        position: relative;
+        cursor: move;
+    }
+
+    .drag-handle {
+        position: absolute;
+        top: 10px;
+        right: 40px;
+        padding: 5px;
+        cursor: move;
+        color: #666;
+        z-index: 10;
+    }
+
+    .size-toggle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px;
+        cursor: pointer;
+        color: #666;
+        z-index: 10;
+    }
+
+    .chart-card.dragging {
+        opacity: 0.5;
+        border: 2px dashed #3498db;
+    }
+
+    .chart-card.expanded {
+        grid-column: span 2;
+        grid-row: span 2;
+        transform: scale(1);
+        z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+        .chart-card.expanded {
+            grid-column: span 1;
+            grid-row: span 2;
+        }
     }
 
     .charts-grid {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        transition: all 0.3s ease;
     }
-}
 
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 24px;
-    border-radius: 4px;
-    color: white;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    animation: slideIn 0.3s ease-out;
-}
-
-.notification.success {
-    background-color: #48bb78;
-}
-
-.notification.error {
-    background-color: #f56565;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
+    /* Animation for expanding/collapsing */
+    .chart-card {
+        transition: all 0.3s ease;
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
+
+    /* Hover effects */
+    .drag-handle:hover,
+    .size-toggle:hover {
+        color: #3498db;
     }
-}
 
-/* Updated Navigation Bar Styles */
-.mainone {
-    width: 250px;
-    background: #012141;
-    min-height: 100vh;
-    transition: all 0.3s ease;
-}
-
-.navbarsec h1 {
-    color: white;
-    text-align: center;
-    padding: 20px 0;
-    margin: 0;
-    font-size: 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.vertical-nav {
-    width: 100%;
-    padding: 10px;
-}
-
-.vertical-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.vertical-nav li {
-    margin: 0;
-}
-
-.vertical-nav a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #ffffff;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 14px;
-}
-
-.vertical-nav a:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.vertical-nav a.active {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.vertical-nav i {
-    margin-right: 12px;
-    width: 20px;
-    text-align: center;
-    font-size: 16px;
-    opacity: 0.9;
-}
-
-/* Main container layout */
-.analyticalmain {
-    display: flex;
-    width: 100%;
-    min-height: 100vh;
-}
-
-.analyticalmain2 {
-    border-top-left-radius: 20px;
-    background-color: #012141;
-    width: 20%;
-}
-
-.analytics-container {
-    width: 80%;
-    padding: 20px;
-    background: #f8f9fa;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .analyticalmain2 {
-        width: 25%;
+    /* Add visual feedback for draggable items */
+    .chart-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    
-    .analytics-container {
-        width: 75%;
+
+    /* Control panel for layout options */
+    .layout-controls {
+        background: #fff;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 10px;
+        align-items: center;
     }
-}
 
-@media (max-width: 768px) {
-    .analyticalmain2 {
-        width: 80px;
+    .layout-controls button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #3498db;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
     }
-    
-    .analytics-container {
-        width: calc(100% - 80px);
+
+    .layout-controls button:hover {
+        background: #2980b9;
     }
-}
 
-/* Update the existing stats grid for full width */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
-    width: 100%;
-}
-
-/* Update charts grid for full width */
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    width: 100%;
-}
-
-/* Update filters section for full width */
-.filters-section {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
-    width: 100%;
-    background: #ffebee;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #ffcdd2;
-}
-
-.logo-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    width: 100%;
-    background-color: #012141;  /* Matching your theme */
-    margin-bottom: 20px;
-}
-
-.logo {
-    max-width: 150px;
-    height: auto;
-    display: block;
-    transition: transform 0.3s ease;  /* Optional: for hover effect */
-}
-
-/* Optional: Add hover effect */
-.logo:hover {
-    transform: scale(1.05);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .logo {
-        max-width: 120px;
+    .charts-grid.compact {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
-    
-    .logo-container {
-        padding: 15px;
+
+    .charts-grid.compact .chart-card {
+        min-height: 250px;
     }
-}
 
-/* Add these styles to your existing CSS */
-
-.chart-card {
-    position: relative;
-    cursor: move;
-}
-
-.drag-handle {
-    position: absolute;
-    top: 10px;
-    right: 40px;
-    padding: 5px;
-    cursor: move;
-    color: #666;
-    z-index: 10;
-}
-
-.size-toggle {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px;
-    cursor: pointer;
-    color: #666;
-    z-index: 10;
-}
-
-.chart-card.dragging {
-    opacity: 0.5;
-    border: 2px dashed #3498db;
-}
-
-.chart-card.expanded {
-    grid-column: span 2;
-    grid-row: span 2;
-    transform: scale(1);
-    z-index: 100;
-}
-
-@media (max-width: 768px) {
-    .chart-card.expanded {
+    .charts-grid.compact .chart-card.expanded {
         grid-column: span 1;
-        grid-row: span 2;
+        grid-row: span 1;
     }
-}
 
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
-    padding: 20px;
-    transition: all 0.3s ease;
-}
-
-/* Animation for expanding/collapsing */
-.chart-card {
-    transition: all 0.3s ease;
-}
-
-/* Hover effects */
-.drag-handle:hover,
-.size-toggle:hover {
-    color: #3498db;
-}
-
-/* Add visual feedback for draggable items */
-.chart-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Control panel for layout options */
-.layout-controls {
-    background: #fff;
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.layout-controls button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    background: #3498db;
-    color: white;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.layout-controls button:hover {
-    background: #2980b9;
-}
-
-.charts-grid.compact {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-
-.charts-grid.compact .chart-card {
-    min-height: 250px;
-}
-
-.charts-grid.compact .chart-card.expanded {
-    grid-column: span 1;
-    grid-row: span 1;
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Helper function to safely parse JSON with fallback
-function safeJSONParse(jsonString, fallback) {
-    try {
-        return JSON.parse(jsonString) || fallback;
-    } catch (e) {
-        console.warn('Error parsing JSON:', e);
-        return fallback;
+    /* Add smooth scrolling */
+    html {
+        scroll-behavior: smooth;
     }
-}
+    </style>
 
-// Monthly Trends Chart
-const monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), {
-    type: 'line',
-    data: {
-        labels: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => `${d.month}/${d.year}`),
-        datasets: [{
-            label: 'Amount (₹)',    
-            data: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => parseFloat(d.amount)),
-            borderColor: '#36a2eb',
-            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-            fill: true,
-            yAxisID: 'amount'
-        }, {
-            label: 'Count',
-            data: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => parseInt(d.count)),
-            borderColor: '#ff6384',
-            backgroundColor: 'rgba(255, 99, 132, 0.1)',
-            fill: true,
-            yAxisID: 'count'
-        }]
-    },
-    options: {
-        responsive: true,
-        interaction: {
-            mode: 'index',
-            intersect: false,
+    <script>
+    // Helper function to safely parse JSON with fallback
+    function safeJSONParse(jsonString, fallback) {
+        try {
+            return JSON.parse(jsonString) || fallback;
+        } catch (e) {
+            console.warn('Error parsing JSON:', e);
+            return fallback;
+        }
+    }
+
+    // Monthly Trends Chart
+    const monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), {
+        type: 'line',
+        data: {
+            labels: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => `${d.month}/${d.year}`),
+            datasets: [{
+                label: 'Amount (₹)',    
+                data: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => parseFloat(d.amount)),
+                borderColor: '#36a2eb',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                fill: true,
+                yAxisID: 'amount'
+            }, {
+                label: 'Count',
+                data: safeJSONParse('{{ monthly_data|tojson|safe }}', []).map(d => parseInt(d.count)),
+                borderColor: '#ff6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                fill: true,
+                yAxisID: 'count'
+            }]
         },
-        scales: {
-            amount: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-                title: {
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                amount: {
+                    type: 'linear',
                     display: true,
-                    text: 'Amount (₹)'
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Amount (₹)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
                 },
-                ticks: {
-                    callback: function(value) {
-                        return '₹' + value.toLocaleString('en-IN');
+                count: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Number of Loans'
+                    },
+                    grid: {
+                        drawOnChartArea: false
                     }
                 }
-            },
-            count: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                title: {
-                    display: true,
-                    text: 'Number of Loans'
-                },
-                grid: {
-                    drawOnChartArea: false
-                }
             }
         }
-    }
-});
+    });
 
-// Amount Distribution Chart
-const amountDistributionChart = new Chart(document.getElementById('amountDistributionChart'), {
-    type: 'bar',
-    data: {
-        labels: safeJSONParse('{{ amount_distribution|tojson|safe }}', []).map(d => d.range),
-        datasets: [{
-            label: 'Number of Loans',
-            data: safeJSONParse('{{ amount_distribution|tojson|safe }}', []).map(d => d.count),
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Number of Loans'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Loan Amount Range'
-                }
-            }
-        }
-    }
-});
-
-// Approval Rate Chart
-const approvalRateChart = new Chart(document.getElementById('approvalRateChart'), {
-    type: 'line',
-    data: {
-        labels: safeJSONParse('{{ approval_data|tojson|safe }}', []).map(d => d.date),
-        datasets: [{
-            label: 'Approval Rate (%)',
-            data: safeJSONParse('{{ approval_data|tojson|safe }}', []).map(d => d.rate),
-            borderColor: '#4bc0c0',
-            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                title: {
-                    display: true,
-                    text: 'Approval Rate (%)'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Date'
-                }
-            }
-        }
-    }
-});
-
-// Processing Time Chart
-const processingTimeChart = new Chart(document.getElementById('processingTimeChart'), {
-    type: 'bar',
-    data: {
-        labels: safeJSONParse('{{ processing_data|tojson|safe }}', []).map(d => d.range),
-        datasets: [{
-            label: 'Number of Applications',
-            data: safeJSONParse('{{ processing_data|tojson|safe }}', []).map(d => d.count),
-            backgroundColor: 'rgba(75, 192, 192, 0.7)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Number of Applications'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Processing Time'
-                }
-            }
-        }
-    }
-});
-
-// Disbursal Date Analysis Chart
-const disbursalDateChart = new Chart(document.getElementById('disbursalDateChart'), {
-    type: 'bar',
-    data: {
-        labels: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.date),
-        datasets: [{
-            label: 'Disbursed Amount',
-            data: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.amount),
-            yAxisID: 'amount',
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }, {
-            label: 'Number of Disbursals',
-            data: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.count),
-            yAxisID: 'count',
-            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1,
-            type: 'line'
-        }]
-    },
-    options: {
-        responsive: true,
-        interaction: {
-            mode: 'index',
-            intersect: false,
+    // Amount Distribution Chart
+    const amountDistributionChart = new Chart(document.getElementById('amountDistributionChart'), {
+        type: 'bar',
+        data: {
+            labels: safeJSONParse('{{ amount_distribution|tojson|safe }}', []).map(d => d.range),
+            datasets: [{
+                label: 'Number of Loans',
+                data: safeJSONParse('{{ amount_distribution|tojson|safe }}', []).map(d => d.count),
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
         },
-        scales: {
-            amount: {
-                type: 'linear',
-                position: 'left',
-                title: {
-                    display: true,
-                    text: 'Disbursed Amount (₹)'
-                },
-                ticks: {
-                    callback: function(value) {
-                        return '₹' + value.toLocaleString('en-IN');
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Loans'
                     }
-                }
-            },
-            count: {
-                type: 'linear',
-                position: 'right',
-                title: {
-                    display: true,
-                    text: 'Number of Disbursals'
                 },
-                grid: {
-                    drawOnChartArea: false
-                }
-            }
-        }
-    }
-});
-
-// Lender Distribution Chart
-const lenderDistributionChart = new Chart(document.getElementById('lenderDistributionChart'), {
-    type: 'doughnut',
-    data: {
-        labels: safeJSONParse('{{ lender_distribution|tojson|safe }}', []).map(d => d.lender),
-        datasets: [{
-            data: safeJSONParse('{{ lender_distribution|tojson|safe }}', []).map(d => d.amount),
-            backgroundColor: [
-                'rgba(54, 162, 235, 0.7)',
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(255, 206, 86, 0.7)',
-                'rgba(75, 192, 192, 0.7)',
-                'rgba(153, 102, 255, 0.7)'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'right'
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.label || '';
-                        let value = context.raw || 0;
-                        return label + ': ₹' + value.toLocaleString('en-IN');
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Loan Amount Range'
                     }
                 }
             }
         }
-    }
-});
+    });
 
-// Partner Performance Chart
-const partnerPerformanceChart = new Chart(document.getElementById('partnerPerformanceChart'), {
-    type: 'bar',
-    data: {
-        labels: safeJSONParse('{{ partner_performance|tojson|safe }}', []).map(d => d.partner),
-        datasets: [{
-            label: 'Disbursed Amount',
-            data: safeJSONParse('{{ partner_performance|tojson|safe }}', []).map(d => d.amount),
-            backgroundColor: 'rgba(75, 192, 192, 0.7)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Disbursed Amount (₹)'
+    // Approval Rate Chart
+    const approvalRateChart = new Chart(document.getElementById('approvalRateChart'), {
+        type: 'line',
+        data: {
+            labels: safeJSONParse('{{ approval_data|tojson|safe }}', []).map(d => d.date),
+            datasets: [{
+                label: 'Approval Rate (%)',
+                data: safeJSONParse('{{ approval_data|tojson|safe }}', []).map(d => d.rate),
+                borderColor: '#4bc0c0',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Approval Rate (%)'
+                    }
                 },
-                ticks: {
-                    callback: function(value) {
-                        return '₹' + value.toLocaleString('en-IN');
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
                     }
                 }
             }
         }
-    }
-});
+    });
 
-// Status Distribution Chart
-const statusDistributionChart = new Chart(document.getElementById('statusDistributionChart'), {
-    type: 'pie',
-    data: {
-        labels: safeJSONParse('{{ status_distribution|tojson|safe }}', []).map(d => d.status),
-        datasets: [{
-            data: safeJSONParse('{{ status_distribution|tojson|safe }}', []).map(d => d.count),
-            backgroundColor: [
-                'rgba(54, 162, 235, 0.7)',
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(255, 206, 86, 0.7)',
-                'rgba(75, 192, 192, 0.7)'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'right'
+    // Processing Time Chart
+    const processingTimeChart = new Chart(document.getElementById('processingTimeChart'), {
+        type: 'bar',
+        data: {
+            labels: safeJSONParse('{{ processing_data|tojson|safe }}', []).map(d => d.range),
+            datasets: [{
+                label: 'Number of Applications',
+                data: safeJSONParse('{{ processing_data|tojson|safe }}', []).map(d => d.count),
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Applications'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Processing Time'
+                    }
+                }
             }
         }
-    }
-});
+    });
 
-// Stats Cards
-document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
-    '₹' + parseFloat(safeJSONParse('{{ total_disbursed|tojson|safe }}', 0)).toLocaleString('en-IN');
-
-document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
-    parseInt(safeJSONParse('{{ total_count|tojson|safe }}', 0)).toLocaleString('en-IN');
-
-document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
-    '₹' + parseFloat(safeJSONParse('{{ avg_ticket|tojson|safe }}', 0)).toLocaleString('en-IN');
-
-document.querySelector('.stat-card:nth-child(4) .stat-amount').textContent = 
-    safeJSONParse('{{ top_lender|tojson|safe }}', 'N/A');
-
-document.querySelector('.stat-card:nth-child(5) .stat-amount').textContent = 
-    safeJSONParse('{{ top_partner|tojson|safe }}', 'N/A');
-
-// Filter Dropdowns
-const lenderSelect = document.getElementById('lender');
-const partnerSelect = document.getElementById('partner');
-const statusSelect = document.getElementById('status');
-
-// Populate dropdowns with safe parsing
-safeJSONParse('{{ lenders|tojson|safe }}', []).forEach(lender => {
-    const option = new Option(lender, lender);
-    lenderSelect.add(option);
-});
-
-safeJSONParse('{{ partners|tojson|safe }}', []).forEach(partner => {
-    const option = new Option(partner, partner);
-    partnerSelect.add(option);
-});
-
-safeJSONParse('{{ statuses|tojson|safe }}', []).forEach(status => {
-    const option = new Option(status, status);
-    statusSelect.add(option);
-});
-
-// Function to apply filters
-function applyFilters() {
-    try {
-        const filters = {
-            dateRange: document.getElementById('dateRange').value,
-            lender: document.getElementById('lender').value,
-            partner: document.getElementById('partner').value,
-            status: document.getElementById('status').value,
-            amountRange: document.getElementById('amountRange').value
-        };
-
-        // Show loading state
-        document.querySelectorAll('.chart-card').forEach(card => {
-            card.classList.add('loading');
-        });
-
-        fetch('/apply_filters', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+    // Disbursal Date Analysis Chart
+    const disbursalDateChart = new Chart(document.getElementById('disbursalDateChart'), {
+        type: 'bar',
+        data: {
+            labels: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.date),
+            datasets: [{
+                label: 'Disbursed Amount',
+                data: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.amount),
+                yAxisID: 'amount',
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Number of Disbursals',
+                data: safeJSONParse('{{ disbursal_data|tojson|safe }}', []).map(d => d.count),
+                yAxisID: 'count',
+                backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                type: 'line'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
             },
-            body: JSON.stringify(filters)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            scales: {
+                amount: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Disbursed Amount (₹)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                },
+                count: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Number of Disbursals'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
             }
-            return response.json();
-        })
-        .then(result => {
-            if (result.status === 'success' && result.data) {
-                updateAllCharts(result.data);
-                showNotification('Filters applied successfully', 'success');
-            } else {
-                throw new Error(result.message || 'Invalid response data');
+        }
+    });
+
+    // Lender Distribution Chart
+    const lenderDistributionChart = new Chart(document.getElementById('lenderDistributionChart'), {
+        type: 'doughnut',
+        data: {
+            labels: safeJSONParse('{{ lender_distribution|tojson|safe }}', []).map(d => d.lender),
+            datasets: [{
+                data: safeJSONParse('{{ lender_distribution|tojson|safe }}', []).map(d => d.amount),
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            return label + ': ₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                }
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(`Error applying filters: ${error.message}`, 'error');
-        })
-        .finally(() => {
-            // Remove loading state
+        }
+    });
+
+    // Partner Performance Chart
+    const partnerPerformanceChart = new Chart(document.getElementById('partnerPerformanceChart'), {
+        type: 'bar',
+        data: {
+            labels: safeJSONParse('{{ partner_performance|tojson|safe }}', []).map(d => d.partner),
+            datasets: [{
+                label: 'Disbursed Amount',
+                data: safeJSONParse('{{ partner_performance|tojson|safe }}', []).map(d => d.amount),
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Disbursed Amount (₹)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Distribution Chart
+    const statusDistributionChart = new Chart(document.getElementById('statusDistributionChart'), {
+        type: 'pie',
+        data: {
+            labels: safeJSONParse('{{ status_distribution|tojson|safe }}', []).map(d => d.status),
+            datasets: [{
+                data: safeJSONParse('{{ status_distribution|tojson|safe }}', []).map(d => d.count),
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+
+    // Stats Cards
+    document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
+        '₹' + parseFloat(safeJSONParse('{{ total_disbursed|tojson|safe }}', 0)).toLocaleString('en-IN');
+
+    document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
+        parseInt(safeJSONParse('{{ total_count|tojson|safe }}', 0)).toLocaleString('en-IN');
+
+    document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
+        '₹' + parseFloat(safeJSONParse('{{ avg_ticket|tojson|safe }}', 0)).toLocaleString('en-IN');
+
+    document.querySelector('.stat-card:nth-child(4) .stat-amount').textContent = 
+        safeJSONParse('{{ top_lender|tojson|safe }}', 'N/A');
+
+    document.querySelector('.stat-card:nth-child(5) .stat-amount').textContent = 
+        safeJSONParse('{{ top_partner|tojson|safe }}', 'N/A');
+
+    // Filter Dropdowns
+    const lenderSelect = document.getElementById('lender');
+    const partnerSelect = document.getElementById('partner');
+    const statusSelect = document.getElementById('status');
+
+    // Populate dropdowns with safe parsing
+    safeJSONParse('{{ lenders|tojson|safe }}', []).forEach(lender => {
+        const option = new Option(lender, lender);
+        lenderSelect.add(option);
+    });
+
+    safeJSONParse('{{ partners|tojson|safe }}', []).forEach(partner => {
+        const option = new Option(partner, partner);
+        partnerSelect.add(option);
+    });
+
+    safeJSONParse('{{ statuses|tojson|safe }}', []).forEach(status => {
+        const option = new Option(status, status);
+        statusSelect.add(option);
+    });
+
+    // Function to apply filters
+    function applyFilters() {
+        try {
+            const filters = {
+                dateRange: document.getElementById('dateRange').value,
+                lender: document.getElementById('lender').value,
+                partner: document.getElementById('partner').value,
+                status: document.getElementById('status').value,
+                amountRange: document.getElementById('amountRange').value
+            };
+
+            // Show loading state
             document.querySelectorAll('.chart-card').forEach(card => {
-                card.classList.remove('loading');
-            });
-        });
-    } catch (error) {
-        console.error('Error in applyFilters:', error);
-        showNotification('Error applying filters', 'error');
-    }
-}
-
-// Function to update all charts
-function updateAllCharts(data) {
-    try {
-        // Update all charts with the new filtered data
-        const updates = [
-            {
-                chart: monthlyTrendsChart,
-                data: {
-                    labels: data.monthly_data.map(d => `${d.month}/${d.year}`),
-                    datasets: [
-                        {
-                            ...monthlyTrendsChart.data.datasets[0],
-                            data: data.monthly_data.map(d => d.amount)
-                        },
-                        {
-                            ...monthlyTrendsChart.data.datasets[1],
-                            data: data.monthly_data.map(d => d.count)
-                        }
-                    ]
-                }
-            },
-            {
-                chart: amountDistributionChart,
-                data: {
-                    labels: data.amount_distribution.map(d => d.range),
-                    datasets: [{
-                        ...amountDistributionChart.data.datasets[0],
-                        data: data.amount_distribution.map(d => d.count)
-                    }]
-                }
-            },
-            {
-                chart: approvalRateChart,
-                data: {
-                    labels: data.approval_data.map(d => d.date),
-                    datasets: [{
-                        ...approvalRateChart.data.datasets[0],
-                        data: data.approval_data.map(d => d.rate)
-                    }]
-                }
-            },
-            {
-                chart: processingTimeChart,
-                data: {
-                    labels: data.processing_data.map(d => d.range),
-                    datasets: [{
-                        ...processingTimeChart.data.datasets[0],
-                        data: data.processing_data.map(d => d.count)
-                    }]
-                }
-            },
-            {
-                chart: disbursalDateChart,
-                data: {
-                    labels: data.disbursal_data.map(d => d.date),
-                    datasets: [
-                        {
-                            ...disbursalDateChart.data.datasets[0],
-                            data: data.disbursal_data.map(d => d.amount)
-                        },
-                        {
-                            ...disbursalDateChart.data.datasets[1],
-                            data: data.disbursal_data.map(d => d.count)
-                        }
-                    ]
-                }
-            },
-            {
-                chart: lenderDistributionChart,
-                data: {
-                    labels: data.lender_distribution.map(d => d.lender),
-                    datasets: [{
-                        ...lenderDistributionChart.data.datasets[0],
-                        data: data.lender_distribution.map(d => d.amount)
-                    }]
-                }
-            },
-            {
-                chart: partnerPerformanceChart,
-                data: {
-                    labels: data.partner_performance.map(d => d.partner),
-                    datasets: [{
-                        ...partnerPerformanceChart.data.datasets[0],
-                        data: data.partner_performance.map(d => d.amount)
-                    }]
-                }
-            },
-            {
-                chart: statusDistributionChart,
-                data: {
-                    labels: data.status_distribution.map(d => d.status),
-                    datasets: [{
-                        ...statusDistributionChart.data.datasets[0],
-                        data: data.status_distribution.map(d => d.count)
-                    }]
-                }
-            }
-        ];
-
-        // Apply all updates with error handling
-        updates.forEach(({chart, data}) => {
-            try {
-                chart.data = data;
-                chart.update('none'); // Use 'none' for better performance
-            } catch (error) {
-                console.error(`Error updating chart ${chart.id}:`, error);
-            }
-        });
-
-        // Update summary statistics
-        updateStatistics(data);
-    } catch (error) {
-        console.error('Error in updateAllCharts:', error);
-        showNotification('Error updating charts', 'error');
-    }
-}
-
-// Add this function after the updateAllCharts function
-function updateStatistics(data) {
-    try {
-        // Update total disbursed
-        document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
-            '₹' + data.total_disbursed.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                card.classList.add('loading');
             });
 
-        // Update total count
-        document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
-            data.total_count.toLocaleString('en-IN');
-
-        // Update average ticket size
-        document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
-            '₹' + data.avg_ticket.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            fetch('/apply_filters', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(filters)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.status === 'success' && result.data) {
+                    updateAllCharts(result.data);
+                    showNotification('Filters applied successfully', 'success');
+                } else {
+                    throw new Error(result.message || 'Invalid response data');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(`Error applying filters: ${error.message}`, 'error');
+            })
+            .finally(() => {
+                // Remove loading state
+                document.querySelectorAll('.chart-card').forEach(card => {
+                    card.classList.remove('loading');
+                });
             });
-
-        // Update top lender if available
-        if (data.top_lender) {
-            document.querySelector('.stat-card:nth-child(4) .stat-amount').textContent = data.top_lender;
+        } catch (error) {
+            console.error('Error in applyFilters:', error);
+            showNotification('Error applying filters', 'error');
         }
+    }
 
-        // Update top partner if available
-        if (data.top_partner) {
-            document.querySelector('.stat-card:nth-child(5) .stat-amount').textContent = data.top_partner;
+    // Function to update all charts
+    function updateAllCharts(data) {
+        try {
+            // Update all charts with the new filtered data
+            const updates = [
+                {
+                    chart: monthlyTrendsChart,
+                    data: {
+                        labels: data.monthly_data.map(d => `${d.month}/${d.year}`),
+                        datasets: [
+                            {
+                                ...monthlyTrendsChart.data.datasets[0],
+                                data: data.monthly_data.map(d => d.amount)
+                            },
+                            {
+                                ...monthlyTrendsChart.data.datasets[1],
+                                data: data.monthly_data.map(d => d.count)
+                            }
+                        ]
+                    }
+                },
+                {
+                    chart: amountDistributionChart,
+                    data: {
+                        labels: data.amount_distribution.map(d => d.range),
+                        datasets: [{
+                            ...amountDistributionChart.data.datasets[0],
+                            data: data.amount_distribution.map(d => d.count)
+                        }]
+                    }
+                },
+                {
+                    chart: approvalRateChart,
+                    data: {
+                        labels: data.approval_data.map(d => d.date),
+                        datasets: [{
+                            ...approvalRateChart.data.datasets[0],
+                            data: data.approval_data.map(d => d.rate)
+                        }]
+                    }
+                },
+                {
+                    chart: processingTimeChart,
+                    data: {
+                        labels: data.processing_data.map(d => d.range),
+                        datasets: [{
+                            ...processingTimeChart.data.datasets[0],
+                            data: data.processing_data.map(d => d.count)
+                        }]
+                    }
+                },
+                {
+                    chart: disbursalDateChart,
+                    data: {
+                        labels: data.disbursal_data.map(d => d.date),
+                        datasets: [
+                            {
+                                ...disbursalDateChart.data.datasets[0],
+                                data: data.disbursal_data.map(d => d.amount)
+                            },
+                            {
+                                ...disbursalDateChart.data.datasets[1],
+                                data: data.disbursal_data.map(d => d.count)
+                            }
+                        ]
+                    }
+                },
+                {
+                    chart: lenderDistributionChart,
+                    data: {
+                        labels: data.lender_distribution.map(d => d.lender),
+                        datasets: [{
+                            ...lenderDistributionChart.data.datasets[0],
+                            data: data.lender_distribution.map(d => d.amount)
+                        }]
+                    }
+                },
+                {
+                    chart: partnerPerformanceChart,
+                    data: {
+                        labels: data.partner_performance.map(d => d.partner),
+                        datasets: [{
+                            ...partnerPerformanceChart.data.datasets[0],
+                            data: data.partner_performance.map(d => d.amount)
+                        }]
+                    }
+                },
+                {
+                    chart: statusDistributionChart,
+                    data: {
+                        labels: data.status_distribution.map(d => d.status),
+                        datasets: [{
+                            ...statusDistributionChart.data.datasets[0],
+                            data: data.status_distribution.map(d => d.count)
+                        }]
+                    }
+                }
+            ];
+
+            // Apply all updates with error handling
+            updates.forEach(({chart, data}) => {
+                try {
+                    chart.data = data;
+                    chart.update('none'); // Use 'none' for better performance
+                } catch (error) {
+                    console.error(`Error updating chart ${chart.id}:`, error);
+                }
+            });
+
+            // Update summary statistics
+            updateStatistics(data);
+        } catch (error) {
+            console.error('Error in updateAllCharts:', error);
+            showNotification('Error updating charts', 'error');
         }
-    } catch (error) {
-        console.error('Error updating statistics:', error);
-        showNotification('Error updating statistics', 'error');
     }
-}
 
-// Add event listeners with error handling
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        // Add event listeners to all filter inputs
-        document.querySelectorAll('.filter-group select').forEach(select => {
-            select.addEventListener('change', applyFilters);
-        });
+    // Add this function after the updateAllCharts function
+    function updateStatistics(data) {
+        try {
+            // Update total disbursed
+            document.querySelector('.stat-card:nth-child(1) .stat-amount').textContent = 
+                '₹' + data.total_disbursed.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
 
-        // Initialize drag and drop
-        initializeDragAndDrop();
+            // Update total count
+            document.querySelector('.stat-card:nth-child(2) .stat-amount').textContent = 
+                data.total_count.toLocaleString('en-IN');
 
-        // Load saved layout
-        loadLayout();
-    } catch (error) {
-        console.error('Error during initialization:', error);
+            // Update average ticket size
+            document.querySelector('.stat-card:nth-child(3) .stat-amount').textContent = 
+                '₹' + data.avg_ticket.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+            // Update top lender if available
+            if (data.top_lender) {
+                document.querySelector('.stat-card:nth-child(4) .stat-amount').textContent = data.top_lender;
+            }
+
+            // Update top partner if available
+            if (data.top_partner) {
+                document.querySelector('.stat-card:nth-child(5) .stat-amount').textContent = data.top_partner;
+            }
+        } catch (error) {
+            console.error('Error updating statistics:', error);
+            showNotification('Error updating statistics', 'error');
+        }
     }
-});
 
-// Add drag and drop functionality
-function initializeDragAndDrop() {
-    const chartsGrid = document.querySelector('.charts-grid');
-    const chartCards = document.querySelectorAll('.chart-card');
+    // Add event listeners with error handling
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            // Add event listeners to all filter inputs
+            document.querySelectorAll('.filter-group select').forEach(select => {
+                select.addEventListener('change', applyFilters);
+            });
 
-    chartCards.forEach(card => {
-        // Make cards draggable
-        card.setAttribute('draggable', true);
-        
-        // Add drag handle
-        const dragHandle = document.createElement('div');
-        dragHandle.className = 'drag-handle';
-        dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
-        card.insertBefore(dragHandle, card.firstChild);
+            // Initialize drag and drop
+            initializeDragAndDrop();
 
-        // Add minimize/maximize button
-        const sizeToggle = document.createElement('div');
-        sizeToggle.className = 'size-toggle';
-        sizeToggle.innerHTML = '<i class="fas fa-expand-alt"></i>';
-        card.insertBefore(sizeToggle, card.firstChild);
+            // Load saved layout
+            loadLayout();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+        }
+    });
 
-        // Event listeners for drag and drop
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragend', handleDragEnd);
-        card.addEventListener('dragover', handleDragOver);
-        card.addEventListener('drop', handleDrop);
+    // Add drag and drop functionality
+    function initializeDragAndDrop() {
+        const chartsGrid = document.querySelector('.charts-grid');
+        const chartCards = document.querySelectorAll('.chart-card');
 
-        // Size toggle click handler
-        sizeToggle.addEventListener('click', () => {
-            card.classList.toggle('expanded');
-            sizeToggle.innerHTML = card.classList.contains('expanded') 
-                ? '<i class="fas fa-compress-alt"></i>' 
-                : '<i class="fas fa-expand-alt"></i>';
+        chartCards.forEach(card => {
+            // Make cards draggable
+            card.setAttribute('draggable', true);
             
-            // Update chart after size change
+            // Add drag handle
+            const dragHandle = document.createElement('div');
+            dragHandle.className = 'drag-handle';
+            dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
+            card.insertBefore(dragHandle, card.firstChild);
+
+            // Add minimize/maximize button
+            const sizeToggle = document.createElement('div');
+            sizeToggle.className = 'size-toggle';
+            sizeToggle.innerHTML = '<i class="fas fa-expand-alt"></i>';
+            card.insertBefore(sizeToggle, card.firstChild);
+
+            // Event listeners for drag and drop
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('drop', handleDrop);
+
+            // Size toggle click handler
+            sizeToggle.addEventListener('click', () => {
+                card.classList.toggle('expanded');
+                sizeToggle.innerHTML = card.classList.contains('expanded') 
+                    ? '<i class="fas fa-compress-alt"></i>' 
+                    : '<i class="fas fa-expand-alt"></i>';
+                
+                // Update chart after size change
+                const chartId = card.querySelector('canvas').id;
+                const chart = Chart.getChart(chartId);
+                if (chart) {
+                    setTimeout(() => chart.resize(), 300);
+                }
+            });
+        });
+    }
+
+    function handleDragStart(e) {
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.chartIndex);
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        const draggingCard = document.querySelector('.dragging');
+        const cards = [...document.querySelectorAll('.chart-card:not(.dragging)')];
+        const nextCard = cards.find(card => {
+            const box = card.getBoundingClientRect();
+            const offset = e.clientY - box.top - box.height / 2;
+            return offset < 0;
+        });
+        
+        const chartsGrid = document.querySelector('.charts-grid');
+        if (nextCard) {
+            chartsGrid.insertBefore(draggingCard, nextCard);
+        } else {
+            chartsGrid.appendChild(draggingCard);
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+    }
+
+    // Save layout to localStorage
+    function saveLayout() {
+        const layout = [];
+        document.querySelectorAll('.chart-card').forEach((card, index) => {
             const chartId = card.querySelector('canvas').id;
-            const chart = Chart.getChart(chartId);
+            const isExpanded = card.classList.contains('expanded');
+            layout.push({ chartId, position: index, isExpanded });
+        });
+        localStorage.setItem('chartsLayout', JSON.stringify(layout));
+    }
+
+    // Load layout from localStorage
+    function loadLayout() {
+        const savedLayout = localStorage.getItem('chartsLayout');
+        if (savedLayout) {
+            const layout = JSON.parse(savedLayout);
+            const chartsGrid = document.querySelector('.charts-grid');
+            const cards = Array.from(document.querySelectorAll('.chart-card'));
+            
+            layout.forEach(item => {
+                const card = cards.find(c => c.querySelector('canvas').id === item.chartId);
+                if (card) {
+                    if (item.isExpanded) {
+                        card.classList.add('expanded');
+                        card.querySelector('.size-toggle').innerHTML = '<i class="fas fa-compress-alt"></i>';
+                    }
+                    chartsGrid.appendChild(card);
+                }
+            });
+        }
+    }
+
+    // Save layout whenever charts are rearranged
+    const chartsGrid = document.querySelector('.charts-grid');
+    const observer = new MutationObserver(saveLayout);
+    observer.observe(chartsGrid, { childList: true });
+
+    // Load saved layout on page load
+    document.addEventListener('DOMContentLoaded', loadLayout);
+
+    // Add these functions to your JavaScript
+    function resetLayout() {
+        localStorage.removeItem('chartsLayout');
+        location.reload();
+    }
+
+    function toggleCompactView() {
+        const chartsGrid = document.querySelector('.charts-grid');
+        chartsGrid.classList.toggle('compact');
+        document.querySelectorAll('.chart-card').forEach(card => {
+            const chart = Chart.getChart(card.querySelector('canvas').id);
             if (chart) {
                 setTimeout(() => chart.resize(), 300);
             }
         });
-    });
-}
-
-function handleDragStart(e) {
-    this.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', this.dataset.chartIndex);
-}
-
-function handleDragEnd(e) {
-    this.classList.remove('dragging');
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    const draggingCard = document.querySelector('.dragging');
-    const cards = [...document.querySelectorAll('.chart-card:not(.dragging)')];
-    const nextCard = cards.find(card => {
-        const box = card.getBoundingClientRect();
-        const offset = e.clientY - box.top - box.height / 2;
-        return offset < 0;
-    });
-    
-    const chartsGrid = document.querySelector('.charts-grid');
-    if (nextCard) {
-        chartsGrid.insertBefore(draggingCard, nextCard);
-    } else {
-        chartsGrid.appendChild(draggingCard);
     }
-}
+    </script>
 
-function handleDrop(e) {
-    e.preventDefault();
-}
-
-// Save layout to localStorage
-function saveLayout() {
-    const layout = [];
-    document.querySelectorAll('.chart-card').forEach((card, index) => {
-        const chartId = card.querySelector('canvas').id;
-        const isExpanded = card.classList.contains('expanded');
-        layout.push({ chartId, position: index, isExpanded });
-    });
-    localStorage.setItem('chartsLayout', JSON.stringify(layout));
-}
-
-// Load layout from localStorage
-function loadLayout() {
-    const savedLayout = localStorage.getItem('chartsLayout');
-    if (savedLayout) {
-        const layout = JSON.parse(savedLayout);
-        const chartsGrid = document.querySelector('.charts-grid');
-        const cards = Array.from(document.querySelectorAll('.chart-card'));
-        
-        layout.forEach(item => {
-            const card = cards.find(c => c.querySelector('canvas').id === item.chartId);
-            if (card) {
-                if (item.isExpanded) {
-                    card.classList.add('expanded');
-                    card.querySelector('.size-toggle').innerHTML = '<i class="fas fa-compress-alt"></i>';
-                }
-                chartsGrid.appendChild(card);
-            }
-        });
-    }
-}
-
-// Save layout whenever charts are rearranged
-const chartsGrid = document.querySelector('.charts-grid');
-const observer = new MutationObserver(saveLayout);
-observer.observe(chartsGrid, { childList: true });
-
-// Load saved layout on page load
-document.addEventListener('DOMContentLoaded', loadLayout);
-
-// Add these functions to your JavaScript
-function resetLayout() {
-    localStorage.removeItem('chartsLayout');
-    location.reload();
-}
-
-function toggleCompactView() {
-    const chartsGrid = document.querySelector('.charts-grid');
-    chartsGrid.classList.toggle('compact');
-    document.querySelectorAll('.chart-card').forEach(card => {
-        const chart = Chart.getChart(card.querySelector('canvas').id);
-        if (chart) {
-            setTimeout(() => chart.resize(), 300);
-        }
-    });
-}
-</script>
-
-<!-- Add Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-<!-- Add this temporarily to debug -->
-<div style="display:none;">
-    Debug: Username = {{ username|default('Not set', true) }}
-    Session data: {{ session|tojson if session else 'No session' }}
-</div>
-{% endblock %}
+    <!-- Add this temporarily to debug -->
+    <div style="display:none;">
+        Debug: Username = {{ username|default('Not set', true) }}
+        Session data: {{ session|tojson if session else 'No session' }}
+    </div>
+</body>
+</html>

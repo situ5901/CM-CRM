@@ -34,8 +34,8 @@ app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:m1jZa
 CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
 
 # Update MongoDB connection
-mongo_uri = os.environ.get('MONGO_URL')  # Make sure to use the correct key name from .env file
-client = MongoClient(mongo_uri)
+mongo_uri = ('mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net')  # Make sure to use the correct key name from .env file
+client = MongoClient("mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net")
 db = client['test']
 mongo = client  # This creates a mongo instance that Flask can use
 users_collection = db['users']
@@ -779,393 +779,153 @@ def update_partners():
 
 @app.route('/analytical')
 def analytical():
+    print("Analytical route hit!")  # Debug print
+    
+    # Get data from MongoDB
     try:
-        # Monthly trends data
-        monthly_pipeline = [
+        # Aggregate data from mis_collection
+        pipeline = [
             {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""}
+                '$addFields': {
+                    'numeric_amount': {'$toDouble': '$disbursedamount'}
                 }
             },
             {
-                "$addFields": {
-                    "numeric_amount": {
-                        "$toDouble": "$disbursedamount"
-                    }
-                }
-            },
-            {
-                "$group": {
-                    "_id": {
-                        "month": {"$substr": ["$disbursaldate", 3, 2]},
-                        "year": {"$substr": ["$disbursaldate", 6, 4]}
-                    },
-                    "amount": {"$sum": "$numeric_amount"},
-                    "count": {"$sum": 1}
-                }
-            },
-            {"$sort": {"_id.year": 1, "_id.month": 1}}
-        ]
-        
-        monthly_result = list(mis_collection.aggregate(monthly_pipeline))
-        
-        # Format monthly data
-        monthly_data = []
-        for item in monthly_result:
-            monthly_data.append({
-                "month": item["_id"]["month"],
-                "year": item["_id"]["year"],
-                "amount": float(item["amount"]),
-                "count": item["count"]
-            })
-
-        # Calculate totals
-        total_pipeline = [
-            {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$addFields": {
-                    "numeric_amount": {"$toDouble": "$disbursedamount"}
-                }
-            },
-            {
-                "$group": {
-                    "_id": None,
-                    "total": {"$sum": "$numeric_amount"},
-                    "count": {"$sum": 1}
+                '$group': {
+                    '_id': None,
+                    'total_disbursed': {'$sum': '$numeric_amount'},
+                    'total_count': {'$sum': 1},
+                    'avg_ticket': {'$avg': '$numeric_amount'}
                 }
             }
         ]
         
-        total_result = list(mis_collection.aggregate(total_pipeline))
-        
-        # Convert to float/int before formatting
-        total_disbursed = float(total_result[0]['total']) if total_result else 0.0
-        total_count = int(total_result[0]['count']) if total_result else 0
-        
-        # Calculate average ticket size
-        avg_ticket = total_disbursed / total_count if total_count > 0 else 0.0
+        stats = list(mis_collection.aggregate(pipeline))
+        stats = stats[0] if stats else {
+            'total_disbursed': 0,
+            'total_count': 0,
+            'avg_ticket': 0
+        }
 
         # Get top lender
-        top_lender_pipeline = [
+        lender_pipeline = [
             {
-                "$match": {
-                    "Lender": {"$exists": True, "$ne": ""}
+                '$group': {
+                    '_id': '$Lender',
+                    'count': {'$sum': 1}
                 }
             },
-            {
-                "$group": {
-                    "_id": "$Lender",
-                    "total": {"$sum": {"$toDouble": "$disbursedamount"}}
-                }
-            },
-            {"$sort": {"total": -1}},
-            {"$limit": 1}
+            {'$sort': {'count': -1}},
+            {'$limit': 1}
         ]
-        
-        top_lender_result = list(mis_collection.aggregate(top_lender_pipeline))
+        top_lender_result = list(mis_collection.aggregate(lender_pipeline))
         top_lender = top_lender_result[0]['_id'] if top_lender_result else "N/A"
 
         # Get top partner
-        top_partner_pipeline = [
-            {
-                "$match": {
-                    "partner": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$partner",
-                    "total": {"$sum": {"$toDouble": "$disbursedamount"}}
-                }
-            },
-            {"$sort": {"total": -1}},
-            {"$limit": 1}
-        ]
-        
-        top_partner_result = list(mis_collection.aggregate(top_partner_pipeline))
-        top_partner = top_partner_result[0]['_id'] if top_partner_result else "N/A"
-
-        # Get filter options
-        lenders = sorted([l for l in mis_collection.distinct("Lender") if l])
-        partners = sorted([p for p in mis_collection.distinct("partner") if p])
-        statuses = sorted([s for s in mis_collection.distinct("status") if s])
-        amount_ranges = ['0-5,000', '5,000-25,000', '25,000-50,000', '50,000-1,00,000', '1,00,000+']
-
-        # Amount Distribution Data
-        amount_distribution_pipeline = [
-            {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$addFields": {
-                    "numeric_amount": {"$toDouble": "$disbursedamount"}
-                }
-            },
-            {
-                "$bucket": {
-                    "groupBy": "$numeric_amount",
-                    "boundaries": [0, 5000, 25000, 50000, 100000, float("inf")],
-                    "default": "Other",
-                    "output": {
-                        "count": {"$sum": 1},
-                        "total": {"$sum": "$numeric_amount"}
-                    }
-                }
-            }
-        ]
-        
-        amount_distribution = list(mis_collection.aggregate(amount_distribution_pipeline))
-        
-        # Add range labels
-        ranges = ['0-5K', '5K-25K', '25K-50K', '50K-100K', '100K+']
-        for i, bucket in enumerate(amount_distribution):
-            if i < len(ranges):
-                bucket['range'] = ranges[i]
-
-        # Approval Rate Data
-        approval_pipeline = [
-            {
-                "$match": {
-                    "status": {"$exists": True, "$ne": ""},
-                    "disbursaldate": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$disbursaldate",
-                    "total": {"$sum": 1},
-                    "approved": {
-                        "$sum": {
-                            "$cond": [
-                                {"$eq": ["$status", "approved"]},
-                                1,
-                                0
-                            ]
-                        }
-                    }
-                }
-            },
-            {
-                "$project": {
-                    "date": "$_id",
-                    "rate": {
-                        "$multiply": [
-                            {"$divide": ["$approved", "$total"]},
-                            100
-                        ]
-                    }
-                }
-            },
-            {"$sort": {"date": 1}}
-        ]
-        
-        approval_data = list(mis_collection.aggregate(approval_pipeline))
-
-        # Processing Time Data
-        processing_pipeline = [
-            {
-                "$match": {
-                    "disbursaldate": {"$exists": True, "$ne": ""},
-                    "createdAt": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$addFields": {
-                    "processing_hours": {
-                        "$divide": [
-                            {"$subtract": [
-                                {"$dateFromString": {
-                                    "dateString": "$disbursaldate",
-                                    "format": "%d-%m-%Y"
-                                }},
-                                {"$dateFromString": {
-                                    "dateString": "$createdAt",
-                                    "format": "%Y-%m-%d %H:%M:%S"
-                                }}
-                            ]},
-                            3600000  # Convert milliseconds to hours
-                        ]
-                    }
-                }
-            },
-            {
-                "$bucket": {
-                    "groupBy": "$processing_hours",
-                    "boundaries": [0, 24, 48, 72, 96, 120],  # Processing time in hours
-                    "default": "120+",
-                    "output": {
-                        "count": {"$sum": 1}
-                    }
-                }
-            }
-        ]
-        
-        processing_data = list(mis_collection.aggregate(processing_pipeline))
-
-        # Add time range labels
-        time_ranges = ['0-24h', '24-48h', '48-72h', '72-96h', '96-120h', '120h+']
-        processing_data_formatted = []
-        for i, data in enumerate(processing_data):
-            label = time_ranges[i] if i < len(time_ranges) else '120h+'
-            processing_data_formatted.append({
-                'range': label,
-                'count': data['count']
-            })
-
-        # Disbursal Date Analysis Data
-        disbursal_pipeline = [
-            {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""},
-                    "disbursaldate": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$addFields": {
-                    "numeric_amount": {"$toDouble": "$disbursedamount"}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$disbursaldate",
-                    "amount": {"$sum": "$numeric_amount"},
-                    "count": {"$sum": 1}
-                }
-            },
-            {
-                "$project": {
-                    "date": "$_id",
-                    "amount": 1,
-                    "count": 1,
-                    "_id": 0
-                }
-            },
-            {"$sort": {"date": 1}}
-        ]
-        
-        disbursal_data = list(mis_collection.aggregate(disbursal_pipeline))
-
-        # Lender Distribution Data
-        lender_pipeline = [
-            {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""},
-                    "Lender": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$addFields": {
-                    "numeric_amount": {"$toDouble": "$disbursedamount"}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$Lender",
-                    "amount": {"$sum": "$numeric_amount"},
-                    "count": {"$sum": 1}
-                }
-            },
-            {
-                "$project": {
-                    "lender": "$_id",
-                    "amount": 1,
-                    "count": 1,
-                    "_id": 0
-                }
-            },
-            {"$sort": {"amount": -1}}
-        ]
-        
-        lender_distribution = list(mis_collection.aggregate(lender_pipeline))
-
-        # Partner Performance Data
         partner_pipeline = [
             {
-                "$match": {
-                    "disbursedamount": {"$exists": True, "$ne": ""},
-                    "partner": {"$exists": True, "$ne": ""}
+                '$group': {
+                    '_id': '$partner',
+                    'count': {'$sum': 1}
+                }
+            },
+            {'$sort': {'count': -1}},
+            {'$limit': 1}
+        ]
+        top_partner_result = list(mis_collection.aggregate(partner_pipeline))
+        top_partner = top_partner_result[0]['_id'] if top_partner_result else "N/A"
+
+        # Get monthly data
+        monthly_pipeline = [
+            {
+                '$addFields': {
+                    'numeric_amount': {'$toDouble': '$disbursedamount'},
+                    'month': {'$substr': ['$disbursaldate', 3, 2]},
+                    'year': {'$substr': ['$disbursaldate', 6, 4]}
                 }
             },
             {
-                "$addFields": {
-                    "numeric_amount": {"$toDouble": "$disbursedamount"}
+                '$group': {
+                    '_id': {
+                        'month': '$month',
+                        'year': '$year'
+                    },
+                    'amount': {'$sum': '$numeric_amount'},
+                    'count': {'$sum': 1}
                 }
             },
-            {
-                "$group": {
-                    "_id": "$partner",
-                    "amount": {"$sum": "$numeric_amount"},
-                    "count": {"$sum": 1}
-                }
-            },
-            {
-                "$project": {
-                    "partner": "$_id",
-                    "amount": 1,
-                    "count": 1,
-                    "_id": 0
-                }
-            },
-            {"$sort": {"amount": -1}}
+            {'$sort': {'_id.year': 1, '_id.month': 1}}
         ]
         
-        partner_performance = list(mis_collection.aggregate(partner_pipeline))
+        monthly_data = list(mis_collection.aggregate(monthly_pipeline))
+        monthly_data = [
+            {
+                'month': item['_id']['month'],
+                'year': item['_id']['year'],
+                'amount': float(item['amount']),
+                'count': item['count']
+            } for item in monthly_data
+        ] if monthly_data else []
 
-        # Status Distribution Data
-        status_pipeline = [
-            {
-                "$match": {
-                    "status": {"$exists": True, "$ne": ""}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$status",
-                    "count": {"$sum": 1}
-                }
-            },
-            {
-                "$project": {
-                    "status": "$_id",
-                    "count": 1,
-                    "_id": 0
-                }
-            },
-            {"$sort": {"count": -1}}
-        ]
-        
-        status_distribution = list(mis_collection.aggregate(status_pipeline))
+        # Get unique lenders and partners
+        lenders = list(mis_collection.distinct('Lender'))
+        partners = list(mis_collection.distinct('partner'))
+        statuses = list(mis_collection.distinct('status'))
 
+        # Define amount ranges
+        amount_ranges = ['0-50000', '50000-100000', '100000+']
+
+        # Prepare data dictionary
+        data = {
+            'total_disbursed': float(stats['total_disbursed']),
+            'total_count': int(stats['total_count']),
+            'avg_ticket': float(stats['avg_ticket']),
+            'top_lender': top_lender,
+            'top_partner': top_partner,
+            'monthly_data': monthly_data,
+            'lenders': lenders,
+            'partners': partners,
+            'statuses': statuses or [],  # Ensure it's never None
+            'amount_ranges': amount_ranges,
+            'amount_distribution': [],  # Initialize with empty list
+            'approval_data': [],  # Initialize with empty list
+            'processing_data': [],  # Initialize with empty list
+            'disbursal_data': [],  # Initialize with empty list
+            'lender_distribution': [],  # Initialize with empty list
+            'partner_performance': [],  # Initialize with empty list
+            'status_distribution': []  # Initialize with empty list
+        }
+
+        # Render the template with the data
         return render_template('analytical.html',
-            monthly_data=monthly_data or [],
-            amount_distribution=amount_distribution or [],
-            approval_data=approval_data or [],
-            processing_data=processing_data_formatted or [],
-            disbursal_data=disbursal_data or [],
-            lender_distribution=lender_distribution or [],
-            partner_performance=partner_performance or [],
-            status_distribution=status_distribution or [],
-            total_disbursed=total_disbursed or 0,
-            total_count=total_count or 0,
-            avg_ticket=avg_ticket or 0,
-            top_lender=top_lender or "N/A",
-            top_partner=top_partner or "N/A",
-            lenders=lenders or [],
-            partners=partners or [],
-            statuses=statuses or [],
-            amount_ranges=amount_ranges or [],
-            username=session.get('username', 'Guest')  # Use session.get() for safety
+            username=session.get('username', 'Guest'),
+            **data  # Unpack all data variables
         )
 
     except Exception as e:
         print(f"Error in analytical route: {str(e)}")
-        return f"An error occurred: {str(e)}", 500
+        # Return a basic template with default values in case of error
+        return render_template('analytical.html',
+            username=session.get('username', 'Guest'),
+            total_disbursed=0,
+            total_count=0,
+            avg_ticket=0,
+            top_lender="N/A",
+            top_partner="N/A",
+            monthly_data=[],
+            lenders=[],
+            partners=[],
+            statuses=[],
+            amount_ranges=[],
+            amount_distribution=[],
+            approval_data=[],
+            processing_data=[],
+            disbursal_data=[],
+            lender_distribution=[],
+            partner_performance=[],
+            status_distribution=[]
+        )
+
 
 # Add this new route to handle saving partner data to DB
 @app.route('/save_partners_to_db', methods=['POST'])
