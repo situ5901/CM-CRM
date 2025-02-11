@@ -169,13 +169,40 @@ def data_upload():
 
                             # Apply lender-specific column selection, renaming, and filter condition
                             if lender_name == "Cashe":
-                                data = data[['mobile_no', 'loan_transferred_date', 'loan_amount']]
-                                data = data.rename(columns={
-                                    'mobile_no': 'phone',
-                                    'loan_transferred_date': 'disbursaldate',
-                                    'loan_amount': 'disbursedamount'
-                                })
-                                data = data[data['disbursedamount'].astype(float) > 1]
+                                try:
+                                    # Get the 'Disbursals' sheet from Excel file
+                                    data = pd.read_excel(file, sheet_name='Disbursals')
+                                    
+                                    # Print column names for debugging
+                                    print("Available columns:", data.columns.tolist())
+                                    
+                                    # Select required columns from Disbursals sheet
+                                    # First verify if columns exist
+                                    required_columns = ['mobile_no', 'loan_transferred_date', 'loan_amount']
+                                    if not all(col in data.columns for col in required_columns):
+                                        raise ValueError(f"Missing required columns. Required: {required_columns}")
+                                        
+                                    data = data[required_columns]
+                                    
+                                    # Convert loan_transferred_date to string format
+                                    data['loan_transferred_date'] = pd.to_datetime(data['loan_transferred_date']).dt.strftime('%Y-%m-%d')
+                                    
+                                    # Rename columns as per requirement
+                                    data = data.rename(columns={
+                                        'mobile_no': 'phone',
+                                        'loan_transferred_date': 'disbursaldate',
+                                        'loan_amount': 'disbursedamount'
+                                    })
+                                    
+                                    # Filter out rows where disbursed amount is less than or equal to 1
+                                    data = data[pd.to_numeric(data['disbursedamount'], errors='coerce') > 1]
+                                    
+                                    # Drop any rows with NaN values
+                                    data = data.dropna()
+                                    
+                                except Exception as e:
+                                    print(f"Error processing Cashe file: {str(e)}")
+                                    raise
                             elif lender_name == "Ramfin":
                                 data = data[['mobile', 'disbursalDate', 'disbursalAmount']]
                                 data = data.rename(columns={
@@ -238,7 +265,7 @@ def data_upload():
                                     'disbursed_amt': 'disbursedamount'
                                 })
                                 data = data[data['disbursedamount'].astype(float) > 1]
-
+                         
                             # Add common columns
                             data['Lender'] = lender_name
                             data['createdAt'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -260,6 +287,7 @@ def data_upload():
                                     
                                     # Debug print
                                     print(f"Saving record: {record['phone']}")
+                                    
 
                                     existing_doc = collection.find_one({'phone': record['phone']})
                                     

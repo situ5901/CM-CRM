@@ -84,6 +84,7 @@
                 <div class="stat-card">
                     <div class="stat-header">TOTAL DISBURSALS</div>
                     <div class="stat-amount">₹{{ "%.2f"|format(total_disbursed|float) }}</div>
+                    <div class="stat-amount">{{ disbursedamount }}</div>
                     <div class="stat-icon">
                         <i class="fas fa-rupee-sign"></i>
                     </div>
@@ -97,7 +98,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">AVG TICKET SIZE</div>
-                    <div class="stat-amount">₹{{ "%.2f"|format(avg_ticket|float) }}</div>
+                    <div class="stat-amount">₹{{ "%.2f"|format(top_partner|float) }}</div>
                     <div class="stat-icon">
                         <i class="fas fa-ticket-alt"></i>
                     </div>
@@ -1362,7 +1363,6 @@
         }
     }
 
-    // Add this function after the updateAllCharts function
     function updateStatistics(data) {
         try {
             // Update total disbursed
