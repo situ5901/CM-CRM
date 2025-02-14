@@ -53,7 +53,7 @@
         }
 
         .maintwo {
-            /* width: calc(100% - 250px); */
+            width: 100%;
             overflow-y: auto;
             padding: 20px;
             height: 100%;
@@ -396,6 +396,61 @@
             /* Matching your theme */
             margin-bottom: 20px;
         }
+
+        .file-count-display {
+            margin: 10px 0;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .file-list {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f5f5f5;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            justify-content: space-between;
+        }
+        
+        .file-item.uploaded {
+            background-color: #e8f5e9;
+        }
+        
+        .file-item.uploaded i {
+            color: #4caf50;
+        }
+        
+        .file-item i {
+            margin-right: 8px;
+        }
+        
+        .upload-time {
+            margin-left: auto;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .remove-file {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 2px 5px;
+        }
+        
+        .remove-file:hover {
+            color: #c0392b;
+        }
     </style>
 </head>
 
@@ -474,8 +529,10 @@
             <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Total Uploads</h3>
-                    <div class="value">1,234</div>
+                    <div class="file-count-display">
+                        <h3>Total Uploads</h3>
+                        <span id="fileCount">0</span> files Uploads
+                    </div>
                 </div>
                 <div class="stat-card">
                     <h3>Today's Uploads</h3>
@@ -508,6 +565,12 @@
                             </select>
                         </div>
 
+                        <!-- Add file count display -->
+                        
+                        
+                        <!-- Add file names display -->
+                        
+
                         <div id="file-input-container">
                             <!-- File groups will be added here -->
                         </div>
@@ -526,27 +589,7 @@
                 <!-- Recent Uploads Section -->
                 <div class="recent-uploads">
                     <h2 class="section-title">Recent Uploads</h2>
-                    <ul class="upload-list">
-                        <li class="upload-item">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-excel"></i>
-                            </div>
-                            <div class="upload-details">
-                                <div class="upload-name">Users_Data.xlsx</div>
-                                <div class="upload-info">2 minutes ago • 1.2MB</div>
-                            </div>
-                        </li>
-                        <li class="upload-item">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-csv"></i>
-                            </div>
-                            <div class="upload-details">
-                                <div class="upload-name">MIS_Report.csv</div>
-                                <div class="upload-info">1 hour ago • 856KB</div>
-                            </div>
-                        </li>
-                        <!-- Add more recent uploads as needed -->
-                    </ul>
+                    <div id="fileList" class="file-list"></div>
                 </div>
             </div>
         </div>
@@ -576,7 +619,7 @@
 <style>
     :root {
         --primary-color: #4361ee;
-        --secondary-color: #3f37c9;
+        --secondary-color: #3f37c9; 
         --success-color: #2ecc71;
         --danger-color: #e74c3c;
         --text-primary: #2d3436;
@@ -751,6 +794,7 @@
 
     .recent-uploads {
         background: white;
+        width: 100%;
         border-radius: 12px;
         padding: 2rem;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
@@ -1075,6 +1119,109 @@
     }
 </style>
 <script>
+    let fileCount = parseInt(sessionStorage.getItem('fileCount')) || 0;
+    let uploadedFiles = JSON.parse(sessionStorage.getItem('uploadedFiles')) || [];
+    let uploadHistory = JSON.parse(localStorage.getItem('uploadHistory')) || [];
+
+    // Initialize the displays when page loads
+    window.onload = function() {
+        updateFileCount();
+        restoreFileList();
+        showUploadHistory();
+    }
+
+    function updateFileCount() {
+        const fileCountElement = document.getElementById('fileCount');
+        fileCountElement.textContent = fileCount + uploadHistory.length;
+        sessionStorage.setItem('fileCount', fileCount);
+    }
+
+    function showUploadHistory() {
+        const fileList = document.getElementById('fileList');
+        
+        // Show previously uploaded files first
+        uploadHistory.forEach((fileInfo, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item uploaded';
+            fileItem.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                ${fileInfo.name}
+                <span class="upload-time">${fileInfo.uploadTime}</span>
+                <button onclick="removeHistoryItem(${index})" class="remove-file">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(fileItem);
+        });
+    }
+
+    function removeHistoryItem(index) {
+        uploadHistory.splice(index, 1);
+        localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+        updateFileCount();
+        restoreFileList();
+    }
+
+    function restoreFileList() {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+        
+        // Show upload history first
+        showUploadHistory();
+        
+        // Then show current files
+        uploadedFiles.forEach(fileName => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item current';
+            fileItem.innerHTML = `
+                <i class="fas fa-file"></i>
+                ${fileName}
+                <button onclick="removeFile('${fileName}')" class="remove-file">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(fileItem);
+        });
+    }
+
+    function removeFile(fileName) {
+        uploadedFiles = uploadedFiles.filter(name => name !== fileName);
+        sessionStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+        fileCount--;
+        updateFileCount();
+        restoreFileList();
+    }
+
+    function updateFileList() {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+        
+        // Show upload history first
+        showUploadHistory();
+        
+        const inputs = document.querySelectorAll('input[type="file"]');
+        inputs.forEach(input => {
+            if (input.files.length > 0) {
+                const fileName = input.files[0].name;
+                if (!uploadedFiles.includes(fileName)) {
+                    uploadedFiles.push(fileName);
+                }
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item current';
+                fileItem.innerHTML = `
+                    <i class="fas fa-file"></i>
+                    ${fileName}
+                    <button onclick="removeFile('${fileName}')" class="remove-file">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        });
+        
+        sessionStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+    }
+
     function addFileInput() {
         const fileInputContainer = document.getElementById("file-input-container");
         const fileGroup = document.createElement("div");
@@ -1102,8 +1249,11 @@
         newInput.name = "file";
         newInput.accept = ".csv, .xlsx";
         newInput.required = true;
-        newInput.onchange = function () {
+        newInput.onchange = function() {
             updateRecordCount(this);
+            fileCount++;
+            updateFileCount();
+            updateFileList();
         };
 
         const recordCountSpan = document.createElement("span");
@@ -1114,8 +1264,11 @@
         deleteButton.type = "button";
         deleteButton.classList.add("delete-btn");
         deleteButton.innerHTML = '<i class="fas fa-trash"></i> Delete';
-        deleteButton.onclick = function () {
+        deleteButton.onclick = function() {
             fileInputContainer.removeChild(fileGroup);
+            fileCount--;
+            updateFileCount();
+            updateFileList();
         };
 
         fileGroup.appendChild(lenderLabel);
@@ -1142,4 +1295,105 @@
         }
 
     }
+
+    // Add form submit handler to update history after successful upload
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        
+        // Get current timestamp
+        const uploadTime = new Date().toLocaleString();
+        
+        // Add current files to upload history
+        uploadedFiles.forEach(fileName => {
+            uploadHistory.push({
+                name: fileName,
+                uploadTime: uploadTime
+            });
+        });
+        
+        // Save updated history to localStorage
+        localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+        
+        // Clear current session
+        sessionStorage.removeItem('fileCount');
+        sessionStorage.removeItem('uploadedFiles');
+        fileCount = 0;
+        uploadedFiles = [];
+        
+        // Update displays
+        updateFileCount();
+        restoreFileList();
+        
+        // Submit the form
+        this.submit();
+    });
+
+    const style = document.createElement('style');
+    style.textContent = `
+        .file-count-display {
+            margin: 10px 0;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .file-list {
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f5f5f5;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            justify-content: space-between;
+        }
+        
+        .file-item.uploaded {
+            background-color: #e8f5e9;
+        }
+        
+        .file-item.uploaded i {
+            color: #4caf50;
+        }
+        
+        .file-item i {
+            margin-right: 8px;
+        }
+        
+        .upload-time {
+            margin-left: auto;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .remove-file {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 2px 5px;
+        }
+        
+        .remove-file:hover {
+            color: #c0392b;
+        }
+        
+        .file-item.uploaded .remove-file {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .file-item.uploaded:hover .remove-file {
+            opacity: 1;
+        }
+    `;
+    document.head.appendChild(style);
 </script>
