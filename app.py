@@ -23,6 +23,7 @@ import queue
 from flask_login import login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_pymongo import PyMongo
 
 
 load_dotenv()
@@ -30,16 +31,18 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.config['MONGO_URI'] = os.environ.get('MONGODB_URI', 'mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net/')
+mongo = PyMongo(app)
 
 CSV_FILE_PATH = r'E:\moon\MyProject\MyProject\MyProject\disbursed_data.csv'
 
 # Update MongoDB connection
-mongo_uri = ('mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net')  # Make sure to use the correct key name from .env file
+mongo_uri = ('mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net')
 client = MongoClient("mongodb+srv://ceo:m1jZaiWN2ulUH0ux@cluster1.zdfza.mongodb.net")
 db = client['test']
 mongo = client  # This creates a mongo instance that Flask can use
 users_collection = db['users']
 mis_collection = db['mis']
+misfile_collection = db['misfile']  # Add this line to initialize misfile collection
 
 # Add error handling and verification
 try:
@@ -318,7 +321,27 @@ def data_upload():
                 flash(f'An error occurred: {str(route_error)}')
                 return redirect(url_for('data_upload'))
 
-        return render_template('data_upload.html', username=session['username'])
+        # Get recent uploads from misfile collection
+        try:
+            recent_uploads = list(misfile_collection.find().sort('upload_time', -1).limit(10))
+            total_uploads = misfile_collection.count_documents({})
+            
+            # Format the dates for display
+            for upload in recent_uploads:
+                upload['upload_time'] = upload['upload_time'].strftime('%d-%m-%Y %H:%M')
+                upload['created_at'] = upload['created_at'].strftime('%d-%m-%Y %H:%M')
+                # Convert ObjectId to string for JSON serialization
+                upload['_id'] = str(upload['_id'])
+                
+        except Exception as e:
+            print(f"Error fetching misfile data: {str(e)}")
+            recent_uploads = []
+            total_uploads = 0
+            
+        return render_template('data_upload.html', 
+                             username=session['username'],
+                             recent_uploads=recent_uploads,
+                             total_uploads=total_uploads)
     else:
         return redirect(url_for('login'))
  
@@ -1623,6 +1646,40 @@ def delete_database():
         return jsonify({'success': True, 'message': 'Database cleared successfully'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/save_upload_history', methods=['POST'])
+def save_upload_history():
+    try:
+        data = request.json
+        files = data.get('files', [])
+        
+        # Insert upload history records
+        inserted_files = []
+        for file_data in files:
+            document = {
+                'filename': file_data['filename'],
+                'lender': file_data['lender'],
+                'upload_time': datetime.fromisoformat(file_data['upload_time'].replace('Z', '+00:00')),
+                'collection_type': file_data['collection_type'],
+                'created_at': datetime.now(),
+                'updated_at': datetime.now()
+            }
+            
+            result = misfile_collection.insert_one(document)
+            inserted_files.append(str(result.inserted_id))
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully saved {len(inserted_files)} files to upload history',
+            'files': inserted_files
+        })
+    
+    except Exception as e:
+        print(f"Error saving upload history: {str(e)}")  # Add logging
+        return jsonify({
+            'success': False, 
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

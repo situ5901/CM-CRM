@@ -451,6 +451,91 @@
         .remove-file:hover {
             color: #c0392b;
         }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-right: 12px;
+        }
+
+        .file-icon i {
+            font-size: 20px;
+            color: #4361ee;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #2d3436;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+            color: #636e72;
+        }
+
+        .collection-type {
+            color: #4361ee;
+            font-weight: 500;
+        }
+
+        .lender-name {
+            color: #2ecc71;
+            font-weight: 500;
+        }
+
+        .upload-time {
+            color: #636e72;
+        }
+
+        .no-uploads {
+            text-align: center;
+            padding: 24px;
+            color: #636e72;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        /* Update the file count display */
+        .file-count-display {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .file-count-display span {
+            font-size: 24px;
+            font-weight: 600;
+            color: #4361ee;
+            display: block;
+            margin: 8px 0;
+        }
     </style>
 </head>
 
@@ -530,7 +615,7 @@
                 <div class="stat-card" style="background-color: #012141;">
                     <div class="file-count-display">
                         <h3 style="color: white;">Total Uploads</h3>
-                        <span id="fileCount">0</span> files Uploads
+                        <span id="fileCount">{{ total_uploads }}</span> files Uploads
                     </div>
                 </div>
                 <div class="stat-card" style="background-color: #012141;">
@@ -548,7 +633,7 @@
                 <!-- Upload Form Section -->
                 <div class="upload-section">
                     <h2 class="section-title">Upload Files</h2>
-                    <form action="{{ url_for('data_upload') }}" method="post" enctype="multipart/form-data">
+                    <form action="{{ url_for('data_upload') }}" method="post" enctype="multipart/form-data" id="uploadForm">
                         <div class="form-group">
                             <label for="collection_type">
                                 <i class="fas fa-database"></i> Select Data Type
@@ -584,7 +669,29 @@
                 <!-- Recent Uploads Section -->
                 <div class="recent-uploads">
                     <h2 class="section-title">Recent Uploads</h2>
-                    <div id="fileList" class="file-list"></div>
+                    <div id="fileList" class="file-list">
+                        {% if recent_uploads %}
+                            {% for upload in recent_uploads %}
+                            <div class="file-item uploaded">
+                                <div class="file-icon">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div class="file-details">
+                                    <div class="file-name">{{ upload.filename }}</div>
+                                    <div class="file-meta">
+                                        <span class="collection-type">{{ upload.collection_type }}</span>
+                                        <span class="lender-name">{{ upload.lender }}</span>
+                                        <span class="upload-time">{{ upload.upload_time }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-uploads">
+                                <p>No recent uploads found</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -1134,15 +1241,33 @@
     function showUploadHistory() {
         const fileList = document.getElementById('fileList');
         
-        // Show previously uploaded files first
-        uploadHistory.forEach((fileInfo, index) => {
+        // Create a Map to track unique file names
+        const uniqueFiles = new Map();
+        
+        // Get only the most recent entry for each file name
+        uploadHistory.forEach((fileInfo) => {
+            const key = `${fileInfo.name}-${fileInfo.lender}`;
+            if (!uniqueFiles.has(key) || 
+                new Date(fileInfo.uploadTime) > new Date(uniqueFiles.get(key).uploadTime)) {
+                uniqueFiles.set(key, fileInfo);
+            }
+        });
+        
+        // Display only unique entries
+        uniqueFiles.forEach((fileInfo) => {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item uploaded';
             fileItem.innerHTML = `
                 <i class="fas fa-check-circle"></i>
-                ${fileInfo.name}
+                <div class="file-details">
+                    <div class="file-name">${fileInfo.name}</div>
+                    <div class="file-meta">
+                        <span class="collection-type">${fileInfo.collection || 'N/A'}</span>
+                        <span class="lender-name">${fileInfo.lender || 'N/A'}</span>
+                    </div>
+                </div>
                 <span class="upload-time">${fileInfo.uploadTime}</span>
-                <button onclick="removeHistoryItem(${index})" class="remove-file">
+                <button onclick="removeHistoryItem('${fileInfo.name}')" class="remove-file">
                     <i class="fas fa-times"></i>
                 </button>
             `;
@@ -1150,8 +1275,9 @@
         });
     }
 
-    function removeHistoryItem(index) {
-        uploadHistory.splice(index, 1);
+    function removeHistoryItem(fileName) {
+        // Remove all entries with this file name
+        uploadHistory = uploadHistory.filter(item => item.name !== fileName);
         localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
         updateFileCount();
         restoreFileList();
@@ -1291,104 +1417,93 @@
 
     }
 
-    // Add form submit handler to update history after successful upload
-    document.querySelector('form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
+    // Update form submit handler
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        // Get current timestamp
-        const uploadTime = new Date().toLocaleString();
-        
-        // Add current files to upload history
-        uploadedFiles.forEach(fileName => {
-            uploadHistory.push({
-                name: fileName,
-                uploadTime: uploadTime
-            });
+        const formData = new FormData(this);
+        const files = document.querySelectorAll('input[type="file"]');
+        const uploadData = [];
+
+        files.forEach(fileInput => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const lenderSelect = fileInput.closest('.file-group').querySelector('select[name="lender"]');
+                
+                uploadData.push({
+                    filename: file.name,
+                    lender: lenderSelect.value,
+                    upload_time: new Date().toISOString(),
+                    collection_type: document.getElementById('collection_type').value
+                });
+            }
         });
-        
-        // Save updated history to localStorage
-        localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
-        
-        // Clear current session
-        sessionStorage.removeItem('fileCount');
-        sessionStorage.removeItem('uploadedFiles');
-        fileCount = 0;
-        uploadedFiles = [];
-        
-        // Update displays
-        updateFileCount();
-        restoreFileList();
-        
-        // Submit the form
-        this.submit();
+
+        if (uploadData.length === 0) {
+            alert('Please select at least one file to upload');
+            return;
+        }
+
+        // First save the upload history
+        fetch('/save_upload_history', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: uploadData
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Reload the page to show updated list
+                window.location.reload();
+            } else {
+                throw new Error(data.error || 'Error saving upload history');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving upload history: ' + error.message);
+        });
     });
 
-    const style = document.createElement('style');
-    style.textContent = `
-        .file-count-display {
-            margin: 10px 0;
-            font-weight: bold;
-            color: var(--primary-color);
+    // Add styles for new elements
+    const additionalStyles = `
+        .file-details {
+            flex: 1;
+            margin-right: 10px;
         }
         
-        .file-list {
-            margin: 10px 0;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #f5f5f5;
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 2px;
         }
         
-        .file-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: white;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            justify-content: space-between;
-        }
-        
-        .file-item.uploaded {
-            background-color: #e8f5e9;
-        }
-        
-        .file-item.uploaded i {
-            color: #4caf50;
-        }
-        
-        .file-item i {
-            margin-right: 8px;
-        }
-        
-        .upload-time {
-            margin-left: auto;
-            font-size: 0.85em;
+        .file-meta {
+            font-size: 0.8em;
             color: #666;
         }
         
-        .remove-file {
-            background: none;
-            border: none;
-            color: #e74c3c;
-            cursor: pointer;
-            margin-left: 10px;
-            padding: 2px 5px;
+        .file-meta span {
+            margin-right: 10px;
         }
         
-        .remove-file:hover {
-            color: #c0392b;
+        .collection-type {
+            color: #2196F3;
         }
         
-        .file-item.uploaded .remove-file {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .file-item.uploaded:hover .remove-file {
-            opacity: 1;
+        .lender-name {
+            color: #4CAF50;
         }
     `;
-    document.head.appendChild(style);
+
+    // Add the new styles to the existing style element
+    document.querySelector('style').textContent += additionalStyles;
 </script>
